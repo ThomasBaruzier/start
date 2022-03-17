@@ -278,6 +278,26 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     fi
   done
 
+# keymap
+  while true; do
+    echo
+    echo $(localectl list-keymaps | egrep -o '^..$') | column
+    echo
+    read -p 'Keymap? (default=fr) ' x
+    [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
+    [ "$x" = '' ] && x=fr
+    if [[ "$x" = s ]]; then
+      echo -e "> \e[31mSkipped\e[0m\n"
+      break
+    elif [[ -n $(localectl list-keymaps | egrep -o '^..$' | grep "$x") ]]; then
+      localectl set-keymap --no-convert "$x"
+      echo -e "> \e[32mPermanent keymap set as "$x"\e[0m\n"
+      break
+    else
+      echo -e '\n> \e[31mERROR : Invalid input\e[0m'
+    fi
+  done
+
   # hostname
   read -p 'Hostname? (default=arch) ' host
   [ "$host" = e ] && echo -e '\nExiting chroot...' && exit
@@ -399,30 +419,3 @@ else
   echo 'Platform not supported yet'
 
 fi
-echo by
-ca
-cf
-cz
-de
-dk
-es
-et
-fa
-fi
-fr
-gr
-hu
-il
-it
-lt
-lv
-mk
-nl
-no
-pl
-ro
-ru
-sg
-ua
-uk
-us | column
