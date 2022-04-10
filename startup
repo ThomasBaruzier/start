@@ -1,0 +1,69 @@
+#!/bin/bash
+
+
+if whoami | grep -q 'u0_'; then # Termux
+
+  # init
+  echo -n '\nWARNING : This script was made for fresh Termux installs. Otherwise, expect your system to break.\nContinue ? '
+  read x; [ "$x" != y ] && exit
+  [ ! -d ~/storage ] && termux-setup-storage
+  touch ~/.hushlogin
+
+  # update
+  echo -n '\nupdate ? '; read x; [ "$x" = y ] && \
+    apt update -o DPkg::Options::="--force-confnew" -y && \
+    apt upgrade -o DPkg::Options::="--force-confnew" -y && \
+    pkg update -o DPkg::Options::="--force-confnew" -y && \
+    pkg upgrade -o DPkg::Options::="--force-confnew" -y
+  mkdir -p ~/.temp ~/.temp/trash
+  rm ~/storage/ -rf
+
+  # packages
+  echo -n "\ninstall packages? : "
+  read x; [ "$x" = y ] && \
+  apt install wget nano python3 p7zip \
+      proot-distro git wget man htop tree \
+      nodejs ffmpeg file lynx jq bc whois \
+      -o DPkg::Options::="--force-confnew" -y && \
+      npm install peerflix -g
+
+  # backup
+  echo -n "\nextract backup? : "
+  read x; echo "$x" | egrep -q '.{8,}' && \
+    curl -# -L 'go.ly/bkp-prv' -o backup.7z && \
+    apt install -y p7zip && \
+    7z x backup.7z -o"$HOME" -p"$x" -y && \
+    rm -rf ~/backup.7z
+  [ "$x" = y ] && \
+    curl -# -L 'go.ly/bkp-pub' -o backup.7z && \
+    apt install -y p7zip && \
+    7z x backup.7z -o"$HOME" -y && \
+    rm -rf ~/backup.7z
+
+  # java
+  echo -n "\ninstall java? : "
+  read x; [ "$x" = y ] && \
+  curl -s 'https://raw.githubusercontent.com/MasterDevX/java/master/installjava' -o javainstall && \
+  bash javainstall && \
+  rm -rf javainstall ~/.profile
+
+  # pip
+  echo -n "\ninstall pip and its packages? : "
+  read x; [ "$x" = y ] && \
+  python3 -m pip install --upgrade pip && \
+  pip install yt-dlp spotdl
+
+  # vm
+  echo -n "\ninstall ubuntu vm? : "
+  read x; [ "$x" = y ] && \
+  apt install proot-distro && \
+  proot-distro install ubuntu
+
+  # end
+  wait; pkill -4 bash
+
+else
+
+  echo 'Platform not supported yet'
+
+fi
