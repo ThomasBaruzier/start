@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 if whoami | grep -q 'u0_'; then # Termux
 
   # init
