@@ -4,7 +4,7 @@
 if whoami | grep -q 'u0_'; then # Termux
 
   # init
-  echo -n '\nWARNING : This script was made for fresh Termux installs. Otherwise, expect your system to break.\nContinue ? '
+  echo -n '\nWARNING : This script was made for fresh TERMUX installs. Otherwise, expect your system to break.\nContinue ? '
   read x; [ "$x" != y ] && exit
   [ ! -d ~/storage ] && termux-setup-storage
   touch ~/.hushlogin
@@ -62,6 +62,32 @@ if whoami | grep -q 'u0_'; then # Termux
   # end
   wait; pkill -4 bash
 
+elif uname -a | grep -q archiso; then
+
+  # init
+  echo -en '\nWARNING : This script was made for ARCH ISOs. Otherwise, expect your system to break.\nContinue ? '
+  read x; [ "$x" != y ] && exit
+  echo -en '\nChange keyboard layout to french ? '
+  read x; [ "$x" = y ] && loadkeys fr
+
+  # internet check
+  echo
+  if ping google.com -c 1 > /dev/null 2>&1; then
+    echo 'Connected to internet'
+  else
+    echo 'Not connected to the internet. Please verify your connection and try again'
+    exit
+  fi
+
+  # sync date
+  timedatectl set-ntp true
+  while timedatectl status | grep -q 'System clock synchronized: no'; do
+    [ "$tries" = 10 ] && echo 'Time clock failed to synchronize... && exit'
+    ((tries++))
+    sleep 1
+  done
+  echo 'Time clock successfully synchronized'
+  
 else
 
   echo 'Platform not supported yet'
