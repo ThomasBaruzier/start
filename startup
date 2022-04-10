@@ -3,13 +3,14 @@
 if whoami | grep -q 'u0_'; then # Termux
 
   # init
-  echo -n '\nWARNING : This script was made for fresh TERMUX installs. Otherwise, expect your system to break.\nContinue ? '
-  read x; [ "$x" != y ] && exit
+  clear
+  echo -en '\e[31mWARNING : this script was made for fresh TERMUX installs. Otherwise, expect your system to break.\e[0m\n\nContinue ? '
+  read x; [ "$x" != y ] && echo && exit
   [ ! -d ~/storage ] && termux-setup-storage
   touch ~/.hushlogin
 
   # update
-  echo -n '\nupdate ? '; read x; [ "$x" = y ] && \
+  echo -en '\nupdate ? '; read x; [ "$x" = y ] && \
     apt update -o DPkg::Options::="--force-confnew" -y && \
     apt upgrade -o DPkg::Options::="--force-confnew" -y && \
     pkg update -o DPkg::Options::="--force-confnew" -y && \
@@ -18,7 +19,7 @@ if whoami | grep -q 'u0_'; then # Termux
   rm ~/storage/ -rf
 
   # packages
-  echo -n "\ninstall packages? : "
+  echo -en "\ninstall packages? : "
   read x; [ "$x" = y ] && \
   apt install wget nano python3 p7zip \
       proot-distro git wget man htop tree \
@@ -27,7 +28,7 @@ if whoami | grep -q 'u0_'; then # Termux
       npm install peerflix -g
 
   # backup
-  echo -n "\nextract backup? : "
+  echo -en "\nextract backup? : "
   read x; echo "$x" | egrep -q '.{8,}' && \
     curl -# -L 'go.ly/bkp-prv' -o backup.7z && \
     apt install -y p7zip && \
@@ -40,20 +41,20 @@ if whoami | grep -q 'u0_'; then # Termux
     rm -rf ~/backup.7z
 
   # java
-  echo -n "\ninstall java? : "
+  echo -en "\ninstall java? : "
   read x; [ "$x" = y ] && \
   curl -s 'https://raw.githubusercontent.com/MasterDevX/java/master/installjava' -o javainstall && \
   bash javainstall && \
   rm -rf javainstall ~/.profile
 
   # pip
-  echo -n "\ninstall pip and its packages? : "
+  echo -en "\ninstall pip and its packages? : "
   read x; [ "$x" = y ] && \
   python3 -m pip install --upgrade pip && \
   pip install yt-dlp spotdl
 
   # vm
-  echo -n "\ninstall ubuntu vm? : "
+  echo -en "\ninstall ubuntu vm? : "
   read x; [ "$x" = y ] && \
   apt install proot-distro && \
   proot-distro install ubuntu
@@ -61,10 +62,11 @@ if whoami | grep -q 'u0_'; then # Termux
   # end
   wait; pkill -4 bash
 
-#elif uname -a | grep -q archiso; then
+elif uname -a | grep -q archiso; then
 
   # init
-  echo -en '\nWARNING : This script was made for ARCH ISOs. Otherwise, expect your system to break.\nContinue ? '
+  clear
+  echo -en '\e[31mWARNING : this script was made for ARCH ISOs. Otherwise, expect your system to break.\e[0m\nContinue ? '
   read x; [ "$x" != y ] && exit
   echo -en '\nChange keyboard layout to french ? '
   read x; [ "$x" = y ] && loadkeys fr
@@ -87,14 +89,14 @@ if whoami | grep -q 'u0_'; then # Termux
   done
   echo 'Time clock successfully synchronized'
 
-elif uname -a | grep -q archiso; then
+#elif uname -a | grep -q 'archiso'; then
 
   # disk selection
   echo
   echo 'Please choose the disk you want arch to be installed on :'
   diskList=$(fdisk -l)
   readarray -t disks <<< $(egrep -o '^Disk /dev/[^,]+' <<< "$diskList" | grep -v '^Disk /dev/loop')
-  for ((i=0; i < ${#disks[@]}; i++)); do
+  for ((i=0; i < "${#disks[@]}"; i++)); do
     echo "[$i] - ${disks[i]:6} - $(grep -b1 ${disks[i]} <<< $diskList)"
   done
 
