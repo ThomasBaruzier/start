@@ -153,40 +153,54 @@ exit
 
 elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
-  echo -e "\nINFO : In chroot, you cannot CTRL+C. To exit, do CTRL+Z\n"
-  read -p 'Setup chroot environnement? ' x
+  echo -e "\nINFO : In chroot, you cannot CTRL+C\nTo exit, \e[31mDO NOT CTRL+Z\e[0m (or it breaks)\nInstead, anwser 'n' to any question\n"
+  read -p 'Setup chroot environnement? (default=y) ' x
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
   while true; do
     echo
     ls /usr/share/zoneinfo/
-    read -p 'Continent? ' x
-    [ "$x" = e ] && echo -e '\nAbording...\n' && exit
-    if [[ "$(find /usr/share/zoneinfo)" =~ "$x" && -n "$x" ]]; then
-      echo -e "> \e[32mSelected $x\e[0m\n"
+    echo
+    read -p 'Region ? (default=Europe) ' x
+    [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+    [ "$x" = '' ] && x=Europe
+    if [[ -d /usr/share/zoneinfo/"$x" && -n "$x" ]]; then
+      echo -e "> \e[32mSelected $x\e[0m"
       break
     else
-      echo -e '> \e[31mERROR : Invalid input\e[0m\n'  
+      echo -e '\n> \e[31mERROR : Invalid input\e[0m'  
     fi
   done
   while true; do
     echo
     ls /usr/share/zoneinfo/"$x"
-    read -p 'Location? ' y
-    [ "$y" = e ] && echo -e '\nAbording...\n' && exit
-    if [[ "$(find /usr/share/zoneinfo/$x)" =~ "$y" && -n "$y" ]]; then
-      echo -e "> \e[32mSelected $y\e[0m\n"
+    echo
+    read -p 'Location? (default=Paris) ' y
+    [ "$y" = n ] && echo -e '\nAbording...\n' && exit
+    [ "$y" = '' ] && y=Paris
+    if [[ -f /usr/share/zoneinfo/"$x"/"$y" ]]; then
+      echo -e "> \e[32mSelected $y\e[0m"
       break
     else
-      echo -e '> \e[31mERROR : Invalid input\e[0m\n'  
+      echo -e '\n> \e[31mERROR : Invalid input\e[0m'  
     fi
   done
-  if [[ -f /usr/share/zoneinfo/"$x"/"$y" ]]; then
-    echo ln -sf /usr/share/zoneinfo/"$x"/"$y" /etc/localtime
-  else
-    echo -e "> \e[31mERROR : Region wasn't set\e[0m\n"
-    exit
-  fi
-  
+#  ln -sf /usr/share/zoneinfo/"$x"/"$y" /etc/localtime
+  while true; do
+    echo
+    cat /etc/locale.gen | egrep -o '[a-z]+_[A-Z]{2}' | sort | uniq | column
+    echo
+    read -p 'Locale? (default=en_US) ' x
+    [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+    [ "$x" = '' ] && x=en_US
+    if [[ -n $(egrep "^#$x" /etc/locale.gen) && "$x" =~ [a-z]+_[A-Z]{2} ]]; then
+      selected=$(grep "^#$x" /etc/locale.gen | grep UTF | head -n 1)
+      echo -e "> \e[32mSelected $(sed 's:UTF-8 UTF-8:UTF-8:' <<< ${selected:1})\e[0m\n"
+      break
+    else
+      echo -e '\n> \e[31mERROR : Invalid input\e[0m'
+    fi
+  done
+
 else
 
   echo 'Platform not supported yet'
