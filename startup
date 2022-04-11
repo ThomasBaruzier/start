@@ -63,7 +63,10 @@ if whoami | grep -q 'u0_'; then # Termux
   # end
   wait; pkill -4 bash
 
-if [[ $(arch-chroot 2>&1) == '==> No chroot directory specified' ]]; then # arch iso
+elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; then # arch iso
+cp "$0" /mnt/root/install
+arch-chroot /mnt ./root/install
+exit
 
   # init
   clear
@@ -137,16 +140,52 @@ if [[ $(arch-chroot 2>&1) == '==> No chroot directory specified' ]]; then # arch
   mkswap "$swap" >> log 2>&1
   swapon "$swap" >> log 2>&1
   mkfs.ext4 "$filesystem" >> log 2>&1
-  echo -e 'Done\n'
   mount "$filesystem" /mnt
+  echo -e 'Done\n'
+
+  # arch-chroot
+  read -p $'Pacstrap and chroot ? (default=y) : ' x
+  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
   pacstrap /mnt base linux-firmware
-  genfstab -U /mnt >> /mnt/etc/fstab >> log 2>&1
+  genfstab -U /mnt >> /mnt/etc/fstab
   cp "$0" /mnt/root/install
-  arch-chroot /mnt ./root/startup
+  arch-chroot /mnt ./root/install
 
 elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
-  echo 'In chroot !'
+  echo -e "\nINFO : In chroot, you cannot CTRL+C. To exit, do CTRL+Z\n"
+  read -p 'Setup chroot environnement? ' x
+  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+  while true; do
+    echo
+    ls /usr/share/zoneinfo/
+    read -p 'Continent? ' x
+    [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+    if [[ "$(find /usr/share/zoneinfo)" =~ "$x" && -n "$x" ]]; then
+      echo -e "> \e[32mSelected $x\e[0m\n"
+      break
+    else
+      echo -e '> \e[31mERROR : Invalid input\e[0m\n'  
+    fi
+  done
+  while true; do
+    echo
+    ls /usr/share/zoneinfo/"$x"
+    read -p 'Location? ' y
+    [ "$y" = e ] && echo -e '\nAbording...\n' && exit
+    if [[ "$(find /usr/share/zoneinfo/$x)" =~ "$y" && -n "$y" ]]; then
+      echo -e "> \e[32mSelected $y\e[0m\n"
+      break
+    else
+      echo -e '> \e[31mERROR : Invalid input\e[0m\n'  
+    fi
+  done
+  if [[ -f /usr/share/zoneinfo/"$x"/"$y" ]]; then
+    echo ln -sf /usr/share/zoneinfo/"$x"/"$y" /etc/localtime
+  else
+    echo -e "> \e[31mERROR : Region wasn't set\e[0m\n"
+    exit
+  fi
   
 else
 
