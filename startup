@@ -64,9 +64,11 @@ if whoami | grep -q 'u0_'; then # Termux
   wait; pkill -4 bash
 
 elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; then # arch iso
-cp "$0" /mnt/root/install
-arch-chroot /mnt ./root/install
-exit
+
+  # jump to chroot section
+  #cp "$0" /mnt/root/install
+  #arch-chroot /mnt ./root/install
+  #exit
 
   # init
   clear
@@ -141,13 +143,19 @@ exit
   swapon "$swap" >> log 2>&1
   mkfs.ext4 "$filesystem" >> log 2>&1
   mount "$filesystem" /mnt
+  mkdir /mnt/boot /mnt/boot/EFI
+  mount "$boot" /mnt/boot/EFI
   echo -e 'Done\n'
 
   # arch-chroot
-  read -p $'Pacstrap and chroot ? (default=y) : ' x
+  read -p $'Install base packages ? (default=y) : ' x
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
-  pacstrap /mnt base linux-firmware nano sudo
+  pacstrap /mnt base linux-firmware nano sudo grub efibootmgr dosfstools os-prober mtools
   genfstab -U /mnt >> /mnt/etc/fstab
+
+  # chroot
+  read -p $'\nChroot in ? (default=y) : ' x
+  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
   cp "$0" /mnt/root/install
   arch-chroot /mnt ./root/install
 
@@ -268,6 +276,12 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo -e "127.0.1.1\t$user.localdomain\t$user" >> /etc/hosts
     echo -e "> \e[32mHosts file has been configured\e[0m\n"
   fi
+
+  # grub
+  read -p 'Config grub? (default=user) ' x
+  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+  grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck
+  echo -e "> \e[32mGrub was configured\e[0m"
   
 else
 
