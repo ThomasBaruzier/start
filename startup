@@ -153,9 +153,12 @@ exit
 
 elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
+  # init
   echo -e "\nINFO : In chroot, you cannot CTRL+C\nTo exit, \e[31mDO NOT CTRL+Z\e[0m (or it breaks)\nInstead, anwser 'n' to any question\n"
   read -p 'Setup chroot environnement? (default=y) ' x
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+
+  # region
   while true; do
     echo
     ls /usr/share/zoneinfo/
@@ -170,6 +173,8 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
       echo -e '\n> \e[31mERROR : Invalid input\e[0m'  
     fi
   done
+
+  # city
   while true; do
     echo
     ls /usr/share/zoneinfo/"$x"
@@ -184,7 +189,9 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
       echo -e '\n> \e[31mERROR : Invalid input\e[0m'  
     fi
   done
-#  ln -sf /usr/share/zoneinfo/"$x"/"$y" /etc/localtime
+  ln -sf /usr/share/zoneinfo/"$x"/"$y" /etc/localtime
+
+  # locale
   while true; do
     echo
     cat /etc/locale.gen | egrep -o '[a-z]+_[A-Z]{2}' | sort | uniq | column
@@ -194,13 +201,62 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     [ "$x" = '' ] && x=en_US
     if [[ -n $(egrep "^#$x" /etc/locale.gen) && "$x" =~ [a-z]+_[A-Z]{2} ]]; then
       selected=$(grep "^#$x" /etc/locale.gen | grep UTF | head -n 1)
-      echo -e "> \e[32mSelected $(sed 's:UTF-8 UTF-8:UTF-8:' <<< ${selected:1})\e[0m\n"
+      if [[ -f /etc/locale.gen.bak ]]; then
+        cp /etc/locale.gen.bak /etc/locale.gen
+      else
+        cp /etc/locale.gen /etc/locale.gen.bak
+      fi
+      result=$(sed "s:$selected:${selected:1}:" /etc/locale.gen)
+      echo "$result" >> /etc/locale.gen
+      egrep -o "^[a-z]+[A-Z]{2}" /etc/locale.gen
+      locale-gen >/dev/null
+      echo -e "> \e[32mApplied $(sed 's:UTF-8 UTF-8:UTF-8:' <<< $(egrep "^[a-z]+_[A-Z]{2}" /etc/locale.gen))\e[0m\n"
       break
     else
       echo -e '\n> \e[31mERROR : Invalid input\e[0m'
     fi
   done
 
+  # hostname
+  read -p 'Hostname? (default=arch) ' host
+  [ "$host" = n ] && echo -e '\nAbording...\n' && exit
+  [ "$host" = '' ] && x=arch
+  echo "$x" > /etc/hostname
+  echo -e "> \e[32mHostname set as $host\e[0m"
+
+  # root pass
+  read -p $'\nRoot password? (default=root) ' x
+  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = '' ] && x=root
+  echo "root:$x" | chpasswd
+  echo -e "> \e[32mPassword for "root" user set\e[0m"
+
+  # user
+  read -p $'\nUser name? (default=user) ' user
+  [ "$user" = n ] && echo -e '\nAbording...\n' && exit
+  [ "$user" = '' ] && user=user
+  useradd -m "$user"
+  usermod -aG wheel,audio,video,optical,storage "$user"
+  echo -e "> \e[32mAdded user \"$user\"\e[0m"
+
+  # user pass
+  read -p $'\nUser password? (default=user) ' x
+  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = '' ] && x=user
+  echo "$user:$x" | chpasswd
+  echo -e "> \e[32mPassword for "$user" user set\e[0m"
+
+  read -p $'\nManual/Auto hosts file config ? (a/m,default=a) ' x
+  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+  if [ "$x" = 'm' ]; then
+    nano /etc/hosts
+  else
+    echo -e "127.0.0.1\tlocalhost" > /etc/hosts
+    echo -e "::1\t\tlocalhost" >> /etc/hosts
+    echo -e "127.0.1.1\t$user.localdomain\t$user" >> /etc/hosts
+    echo -e "> \e[32mHosts file has been configured\e[0m\n"
+  fi
+  
 else
 
   echo 'Platform not supported yet'
