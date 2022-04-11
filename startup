@@ -143,8 +143,6 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   swapon "$swap" >> log 2>&1
   mkfs.ext4 "$filesystem" >> log 2>&1
   mount "$filesystem" /mnt
-  mkdir /mnt/boot /mnt/boot/EFI
-  mount "$boot" /mnt/boot/EFI
   echo -e 'Done\n'
 
   # arch-chroot
@@ -281,6 +279,8 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p 'Config grub? (default=user) ' x
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
   grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck
+  mkdir /boot/EFI
+  mount "$boot" /mnt/boot/EFI
   echo -e "> \e[32mGrub was configured\e[0m"
   
 else
