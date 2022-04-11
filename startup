@@ -65,15 +65,14 @@ if whoami | grep -q 'u0_'; then # Termux
 
 elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; then # arch iso
 
-  # jump to chroot section
-  #cp "$0" /mnt/root/install
-  #arch-chroot /mnt ./root/install
-  #exit
-
   # init
   clear
   echo -en '\e[33mWARNING : this script was made for ARCH ISOs. Otherwise, expect your system to break.\e[0m\nContinue ? (default=n) '
   read x; [ "$x" != y ] && echo -e '\nAbording...\n' && exit
+  read x; [ "$x" = chroot ] && \
+  cp "$0" /mnt/root/install && \
+  arch-chroot /mnt ./root/install && \
+  exit
 
   # internet check
   echo
@@ -119,7 +118,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     else
       echo -e "> \e[31mERROR : Invalid selection\e[0m\n"
     fi
-    
+
   done
 
   # partitionning
@@ -143,6 +142,8 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   swapon "$swap" >> log 2>&1
   mkfs.ext4 "$filesystem" >> log 2>&1
   mount "$filesystem" /mnt
+  mkdir -p /mnt/boot/EFI
+  mount "$efi" /mnt/boot/EFI
   echo -e 'Done\n'
 
   # arch-chroot
@@ -176,7 +177,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
       echo -e "> \e[32mSelected $x\e[0m"
       break
     else
-      echo -e '\n> \e[31mERROR : Invalid input\e[0m'  
+      echo -e '\n> \e[31mERROR : Invalid input\e[0m'
     fi
   done
 
@@ -192,7 +193,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
       echo -e "> \e[32mSelected $y\e[0m"
       break
     else
-      echo -e '\n> \e[31mERROR : Invalid input\e[0m'  
+      echo -e '\n> \e[31mERROR : Invalid input\e[0m'
     fi
   done
   ln -sf /usr/share/zoneinfo/"$x"/"$y" /etc/localtime
@@ -279,10 +280,8 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p 'Config grub? (default=user) ' x
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
   grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck
-  mkdir /boot/EFI
-  mount "$boot" /mnt/boot/EFI
   echo -e "> \e[32mGrub was configured\e[0m"
-  
+
 else
 
   echo 'Platform not supported yet'
