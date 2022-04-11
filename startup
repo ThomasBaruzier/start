@@ -24,6 +24,7 @@ if whoami | grep -q 'u0_'; then # Termux
   apt install wget nano python3 p7zip \
       proot-distro git wget man htop tree \
       nodejs ffmpeg file lynx jq bc whois \
+      imagemagick potrace \
       -o DPkg::Options::="--force-confnew" -y && \
       npm install peerflix -g
 
