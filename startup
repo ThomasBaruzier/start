@@ -63,7 +63,7 @@ if whoami | grep -q 'u0_'; then # Termux
   # end
   wait; pkill -4 bash
 
-#elif uname -a | grep -q archiso; then # arch iso
+if [[ $(arch-chroot 2>&1) == '==> No chroot directory specified' ]]; then # arch iso
 
   # init
   clear
@@ -87,8 +87,6 @@ if whoami | grep -q 'u0_'; then # Termux
     sleep 0.5
   done
   echo -e '> Time clock successfully synchronized\n'
-
-#elif uname -a | grep -q 'archiso'; then
 
   # disk selection
   while true; do
@@ -128,9 +126,6 @@ if whoami | grep -q 'u0_'; then # Termux
   fdisk -l "$disk" --color=always | egrep -v -e '^Units' -e '^Sector size' -e '^I/O' -e '^Disk identifier'
   [ "$x" != y ] && echo -e '\nAbording...\n' && exit
 
-elif uname -a | grep -q 'archiso'; then
-disk=/dev/nvme0n1
-
   # filesystems
   efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
   swap=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux swap' | awk '{print $1}')
@@ -138,12 +133,20 @@ disk=/dev/nvme0n1
   read -p $'\nMake filesystems ? (default=y) '
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
   echo 'Please wait a few minutes...'
-#  mkfs.fat -F32 "$efi" >> log 2>&1
-#  mkswap "$swap" >> log 2>&1
-#  swapon "$swap" >> log 2>&1
-#  mkfs.ext4 "$filesystem" >> log 2>&1
+  mkfs.fat -F32 "$efi" >> log 2>&1
+  mkswap "$swap" >> log 2>&1
+  swapon "$swap" >> log 2>&1
+  mkfs.ext4 "$filesystem" >> log 2>&1
   echo -e 'Done\n'
-#  mount "$filesystem" /mnt
+  mount "$filesystem" /mnt
+  pacstrap /mnt base linux-firmware
+  genfstab -U /mnt >> /mnt/etc/fstab >> log 2>&1
+  cp "$0" /mnt/root/install
+  arch-chroot /mnt ./root/startup
+
+elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
+
+  echo 'In chroot !'
   
 else
 
