@@ -146,7 +146,7 @@ exit
   # arch-chroot
   read -p $'Pacstrap and chroot ? (default=y) : ' x
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
-  pacstrap /mnt base linux-firmware
+  pacstrap /mnt base linux-firmware nano sudo
   genfstab -U /mnt >> /mnt/etc/fstab
   cp "$0" /mnt/root/install
   arch-chroot /mnt ./root/install
@@ -220,7 +220,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   # hostname
   read -p 'Hostname? (default=arch) ' host
   [ "$host" = n ] && echo -e '\nAbording...\n' && exit
-  [ "$host" = '' ] && x=arch
+  [ "$host" = '' ] && host=arch
   echo "$x" > /etc/hostname
   echo -e "> \e[32mHostname set as $host\e[0m"
 
@@ -235,7 +235,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p $'\nUser name? (default=user) ' user
   [ "$user" = n ] && echo -e '\nAbording...\n' && exit
   [ "$user" = '' ] && user=user
-  useradd -m "$user"
+  useradd -m "$user" 2>/dev/null && \
   usermod -aG wheel,audio,video,optical,storage "$user"
   echo -e "> \e[32mAdded user \"$user\"\e[0m"
 
@@ -246,6 +246,18 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   echo "$user:$x" | chpasswd
   echo -e "> \e[32mPassword for "$user" user set\e[0m"
 
+  # sudo
+  read -p $'\nRequest password when user use sudo ? (default=n) ' x
+  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = '' ] && x=n
+  if [[ "$x" = 'n' ]]; then
+    echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' | sudo EDITOR='tee -a' visudo >/dev/null
+  else
+    echo '%wheel ALL=(ALL:ALL) ALL' | sudo EDITOR='tee -a' visudo >/dev/null
+  fi
+  echo -e "> \e[32mSettings saved\e[0m"
+
+  # hosts
   read -p $'\nManual/Auto hosts file config ? (a/m,default=a) ' x
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
   if [ "$x" = 'm' ]; then
