@@ -132,7 +132,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   swap=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux swap' | awk '{print $1}')
   filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
   read -p $'\nMake filesystems ? (default=y) '
-  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   echo 'Please wait a few minutes...'
   mkfs.fat -F32 "$efi" >> log 2>&1
   mkswap "$swap" >> log 2>&1
@@ -161,6 +161,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   echo -e "\nINFO : In chroot, you cannot CTRL+C\nTo exit, \e[31mDO NOT CTRL+Z\e[0m (or it breaks)\nInstead, anwser 'n' to any question\n"
   read -p 'Setup chroot environnement? (default=y) ' x
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   systemctl enable NetworkManager
 
   # region
