@@ -134,14 +134,18 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   read -p $'\nMake filesystems ? (default=y) '
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
-  echo 'Please wait a few minutes...'
-  umount -q -l "$filesystem"
-  mkfs.fat -F32 "$efi" >> log 2>&1
-  mkswap "$swap" >> log 2>&1
-  swapon "$swap" >> log 2>&1
-  mkfs.ext4 "$filesystem" >> log 2>&1
-  mount "$filesystem" /mnt
-  echo -e 'Done\n'
+  if [[ "$x" = s ]]; then
+      echo -e '\e[31mSkipped\e[0m\n'
+  else
+    echo 'Please wait a few minutes...'
+    umount -q -l "$filesystem"
+    mkfs.fat -F32 "$efi" >> log 2>&1
+    mkswap "$swap" >> log 2>&1
+    swapon "$swap" >> log 2>&1
+    mkfs.ext4 "$filesystem" >> log 2>&1
+    mount "$filesystem" /mnt
+    echo -e 'Done\n'
+  fi
 
   # arch-chroot
   read -p $'Install base packages ? (default=y) : ' x
@@ -185,7 +189,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     read -p 'Region ? (default=Europe) ' x
     [ "$x" = e ] && echo -e '\nAbording...\n' && exit
     [ "$x" = '' ] && x=Europe
-    if [[ "$x" = n ]]; then
+    if [[ "$x" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m"
       break
     elif [[ -d /usr/share/zoneinfo/"$x" && -n "$x" ]]; then
@@ -204,7 +208,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     read -p 'Location? (default=Paris) ' y
     [ "$y" = e ] && echo -e '\nAbording...\n' && exit
     [ "$y" = '' ] && y=Paris
-    if [[ "$x" = n ]]; then
+    if [[ "$x" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m"
       break
     elif [[ -f /usr/share/zoneinfo/"$x"/"$y" ]]; then
@@ -224,7 +228,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     read -p 'Locale? (default=en_US) ' x
     [ "$x" = e ] && echo -e '\nAbording...\n' && exit
     [ "$x" = '' ] && x=en_US
-    if [[ "$x" = n ]]; then
+    if [[ "$x" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m"
       break
     elif [[ -n $(egrep "^#$x" /etc/locale.gen) && "$x" =~ [a-z]+_[A-Z]{2} ]]; then
