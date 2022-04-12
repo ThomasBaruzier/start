@@ -69,7 +69,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   clear
   echo -en '\e[33mWARNING : this script was made for ARCH ISOs. Otherwise, expect your system to break.\e[0m\nContinue ? (default=n) '
   read x; [ "$x" != y ] && echo -e '\nAbording...\n' && exit
-  [ "$x" = c ] && cp "$0" /mnt/root/install && arch-chroot /mnt ./root/install && exit
+  [ "$x" = chroot ] && cp "$0" /mnt/root/install && arch-chroot /mnt ./root/install && exit
 
   # internet check
   echo
@@ -145,13 +145,13 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
   # arch-chroot
   read -p $'Install base packages ? (default=y) : ' x
-  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   pacstrap /mnt base linux-firmware nano vim sudo grub efibootmgr dosfstools os-prober mtools networkmanager git jq bc
   genfstab -U /mnt >> /mnt/etc/fstab
 
   # chroot
   read -p $'\nChroot in ? (default=y) : ' x
-  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   cp "$0" /mnt/root/install
   arch-chroot /mnt ./root/install
 
@@ -169,9 +169,12 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     ls /usr/share/zoneinfo/
     echo
     read -p 'Region ? (default=Europe) ' x
-    [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+    [ "$x" = e ] && echo -e '\nAbording...\n' && exit
     [ "$x" = '' ] && x=Europe
-    if [[ -d /usr/share/zoneinfo/"$x" && -n "$x" ]]; then
+    if [[ "$x" = n ]]; then
+      echo -e "> \e[32mSkipped\e[0m"
+      break
+    elif [[ -d /usr/share/zoneinfo/"$x" && -n "$x" ]]; then
       echo -e "> \e[32mSelected $x\e[0m"
       break
     else
@@ -185,9 +188,12 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     ls /usr/share/zoneinfo/"$x"
     echo
     read -p 'Location? (default=Paris) ' y
-    [ "$y" = n ] && echo -e '\nAbording...\n' && exit
+    [ "$y" = e ] && echo -e '\nAbording...\n' && exit
     [ "$y" = '' ] && y=Paris
-    if [[ -f /usr/share/zoneinfo/"$x"/"$y" ]]; then
+    if [[ "$x" = n ]]; then
+      echo -e "> \e[32mSkipped\e[0m"
+      break
+    elif [[ -f /usr/share/zoneinfo/"$x"/"$y" ]]; then
       echo -e "> \e[32mSelected $y\e[0m"
       break
     else
@@ -202,9 +208,12 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     cat /etc/locale.gen | egrep -o '[a-z]+_[A-Z]{2}' | sort | uniq | column
     echo
     read -p 'Locale? (default=en_US) ' x
-    [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+    [ "$x" = e ] && echo -e '\nAbording...\n' && exit
     [ "$x" = '' ] && x=en_US
-    if [[ -n $(egrep "^#$x" /etc/locale.gen) && "$x" =~ [a-z]+_[A-Z]{2} ]]; then
+    if [[ "$x" = n ]]; then
+      echo -e "> \e[32mSkipped\e[0m"
+      break
+    elif [[ -n $(egrep "^#$x" /etc/locale.gen) && "$x" =~ [a-z]+_[A-Z]{2} ]]; then
       selected=$(grep "^#$x" /etc/locale.gen | grep UTF | head -n 1)
       if [[ -f /etc/locale.gen.bak ]]; then
         cp /etc/locale.gen.bak /etc/locale.gen
@@ -224,7 +233,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # hostname
   read -p 'Hostname? (default=arch) ' host
-  [ "$host" = n ] && echo -e '\nAbording...\n' && exit
+  [ "$host" = e ] && echo -e '\nAbording...\n' && exit
   [ "$host" = '' ] && host=arch
   if [[ "$x" = n ]]; then
     echo -e "> \e[32mSkipped\e[0m"
