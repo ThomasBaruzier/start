@@ -133,6 +133,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
   read -p $'\nMake filesystems ? (default=y) '
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
   echo 'Please wait a few minutes...'
   mkfs.fat -F32 "$efi" >> log 2>&1
   mkswap "$swap" >> log 2>&1
@@ -146,14 +147,28 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   # arch-chroot
   read -p $'Install base packages ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
   pacstrap /mnt base linux-firmware nano vim sudo grub efibootmgr dosfstools os-prober mtools networkmanager git jq bc
   genfstab -U /mnt >> /mnt/etc/fstab
 
   # chroot
   read -p $'\nChroot in ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
   cp "$0" /mnt/root/install
   arch-chroot /mnt ./root/install
+  rm /mnt/root/install
+
+  # reboot
+  read -p $'\nUnmount and reboot ? (default=y) : ' x
+  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  if [[ "$x" = n ]]; then
+    echo -e "> \e[32mSkipped\e[0m"
+  else
+    umount -l "$filesystem"
+    reboot now
+  fi
+  echo -e "\n\e[32mScript finished!\e[0m\n"
 
 elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
