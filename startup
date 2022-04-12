@@ -325,8 +325,8 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     mkdir /boot/EFI
     umount -l -q $(cat /root/.efiDisk)
     mount -q $(cat /root/.efiDisk) /boot/EFI/
-    grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck >> log 2&>1
-    grub-mkconfig -o /boot/grub/grub.cfg >> log 2&>1
+    grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck >> log 2>&1
+    grub-mkconfig -o /boot/grub/grub.cfg >> log 2>&1
     echo -e "> \e[32mGrub was configured\e[0m"
   else
     echo -e "> \e[31mSkipped\e[0m"
