@@ -69,14 +69,11 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   clear
   echo -en '\e[33mWARNING : this script was made for ARCH ISOs. Otherwise, expect your system to break.\e[0m\nContinue ? (default=n) '
   read x; [ "$x" != y ] && echo -e '\nAbording...\n' && exit
-  read x; [ "$x" = chroot ] && \
-  cp "$0" /mnt/root/install && \
-  arch-chroot /mnt ./root/install && \
-  exit
+  [ "$x" = c ] && cp "$0" /mnt/root/install && arch-chroot /mnt ./root/install && exit
 
   # internet check
   echo
-  if ping google.com -c 1 > /dev/null 2>&1; then
+  if ping google.com -c1 >/dev/null 2>&1; then
     echo '> Connected to the internet'
   else
     echo -e '> \e[31mERROR : Not connected to the internet. Please verify your connection and try again\e[0m\n'
@@ -149,7 +146,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   # arch-chroot
   read -p $'Install base packages ? (default=y) : ' x
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
-  pacstrap /mnt base linux-firmware nano sudo grub efibootmgr dosfstools os-prober mtools
+  pacstrap /mnt base linux-firmware nano vim sudo grub efibootmgr dosfstools os-prober mtools networkmanager git jq bc
   genfstab -U /mnt >> /mnt/etc/fstab
 
   # chroot
@@ -164,6 +161,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   echo -e "\nINFO : In chroot, you cannot CTRL+C\nTo exit, \e[31mDO NOT CTRL+Z\e[0m (or it breaks)\nInstead, anwser 'n' to any question\n"
   read -p 'Setup chroot environnement? (default=y) ' x
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+  systemctl enable NetworkManager
 
   # region
   while true; do
@@ -228,59 +226,103 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p 'Hostname? (default=arch) ' host
   [ "$host" = n ] && echo -e '\nAbording...\n' && exit
   [ "$host" = '' ] && host=arch
-  echo "$x" > /etc/hostname
-  echo -e "> \e[32mHostname set as $host\e[0m"
+  if [[ "$x" = n ]]; then
+    echo -e "> \e[32mSkipped\e[0m"
+  else
+    echo "$x" > /etc/hostname
+    echo -e "> \e[32mHostname set as $host\e[0m"
+  fi
 
   # root pass
   read -p $'\nRoot password? (default=root) ' x
-  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   [ "$x" = '' ] && x=root
-  echo "root:$x" | chpasswd
-  echo -e "> \e[32mPassword for "root" user set\e[0m"
+  if [[ "$x" = n ]]; then
+    echo -e "> \e[32mSkipped\e[0m"
+  else
+    echo "root:$x" | chpasswd
+    echo -e "> \e[32mPassword for "root" user set\e[0m"
+  fi
 
   # user
   read -p $'\nUser name? (default=user) ' user
-  [ "$user" = n ] && echo -e '\nAbording...\n' && exit
+  [ "$user" = e ] && echo -e '\nAbording...\n' && exit
   [ "$user" = '' ] && user=user
-  useradd -m "$user" 2>/dev/null && \
-  usermod -aG wheel,audio,video,optical,storage "$user"
-  echo -e "> \e[32mAdded user \"$user\"\e[0m"
+  if [[ "$x" = n ]]; then
+    echo -e "> \e[32mSkipped\e[0m"
+    user=user
+  else
+    useradd -m "$user" 2>/dev/null && \
+    usermod -aG wheel,audio,video,optical,storage "$user"
+    echo -e "> \e[32mAdded user \"$user\"\e[0m"
+  fi
 
   # user pass
   read -p $'\nUser password? (default=user) ' x
-  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   [ "$x" = '' ] && x=user
-  echo "$user:$x" | chpasswd
-  echo -e "> \e[32mPassword for "$user" user set\e[0m"
+  if [[ "$x" = n ]]; then
+    echo -e "> \e[32mSkipped\e[0m"
+  else
+    echo "$user:$x" | chpasswd
+    echo -e "> \e[32mPassword for "$user" user set\e[0m"
+  fi
 
   # sudo
   read -p $'\nRequest password when user use sudo ? (default=n) ' x
-  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
-  [ "$x" = '' ] && x=n
-  if [[ "$x" = 'n' ]]; then
+  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  if [[ "$x" = n || -z "$x" ]]; then
     echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' | sudo EDITOR='tee -a' visudo >/dev/null
-  else
+    echo -e "> \e[32mSettings saved\e[0m"
+  elif [[ "$x" = y ]]; then
     echo '%wheel ALL=(ALL:ALL) ALL' | sudo EDITOR='tee -a' visudo >/dev/null
+    echo -e "> \e[32mSettings saved\e[0m"
+  else
+    echo -e "> \e[32mSkipped\e[0m"
   fi
-  echo -e "> \e[32mSettings saved\e[0m"
 
   # hosts
-  read -p $'\nManual/Auto hosts file config ? (a/m,default=a) ' x
-  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
-  if [ "$x" = 'm' ]; then
+  read -p $'\nAutoconfigure hosts file ? (default=y) ' x
+  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  if [[ "$x" = n ]]; then
     nano /etc/hosts
-  else
+  elif [[ "$x" = y || -z "$x" ]]; then
     echo -e "127.0.0.1\tlocalhost" > /etc/hosts
     echo -e "::1\t\tlocalhost" >> /etc/hosts
     echo -e "127.0.1.1\t$user.localdomain\t$user" >> /etc/hosts
     echo -e "> \e[32mHosts file has been configured\e[0m\n"
+  else
+    echo -e "> \e[32mSkipped\e[0m\n"
   fi
 
   # grub
-  read -p 'Config grub? (default=user) ' x
-  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
-  grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck
-  echo -e "> \e[32mGrub was configured\e[0m"
+  read -p 'Config grub? (default=y) ' x
+  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  if [[ "$x" = y || -z "$x" ]]; then
+    grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck >> /root/log 2>&1
+    grub-mkconfig -o /boot/grub/grub.cfg >> /root/log 2>&1
+    echo -e "> \e[32mGrub was configured\e[0m"
+  else
+    echo -e "> \e[32mSkipped\e[0m"
+  fi
+
+  # typical packages
+  read -p $'\nUpdate and install typical packages ? (default=y) : ' x
+  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  if [[ "$x" = y || -z "$x" ]]; then
+    pacman -Syu jq bc p7zip wget python3 man htop tree nodejs ffmpeg file lynx whois imagemagick potrace base-devel
+  else
+    echo -e "> \e[32mSkipped\e[0m"
+  fi
+
+  # personnal packages
+  read -p $'\nInstall personnal packages (Gnome and AMD drivers) ? (default=n) : ' x
+  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  if [[ "$x" = y ]]; then
+    pacman -Syu 
+  else
+    echo -e "> \e[32mSkipped\e[0m"
+  fi
 
 else
 
