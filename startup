@@ -141,8 +141,6 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   swapon "$swap" >> log 2>&1
   mkfs.ext4 "$filesystem" >> log 2>&1
   mount "$filesystem" /mnt
-  mkdir -p /mnt/boot/EFI
-  mount "$efi" /mnt/boot/EFI
   echo -e 'Done\n'
 
   # arch-chroot
@@ -158,8 +156,8 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
   cp "$0" /mnt/root/install
-  arch-chroot /mnt ./root/install
-  rm /mnt/root/install
+  echo "$efi" > /mnt/root/.efiDisk
+  arch-chroot /mnt ./root/install "$efi"
   cat log >> /mnt/root/log
 
   # reboot
@@ -171,7 +169,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     umount -l "$filesystem"
     reboot now
   fi
-  echo -e "\n\e[32mScript finished!\e[0m\n"
+  echo -e "\n\e[32mScript finished!\e[0m"
   echo -e "INFO : Please do 'umount -l $filesystem' before rebooting\n"
 
 elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
@@ -324,8 +322,11 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p 'Config grub? (default=y) ' x
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   if [[ "$x" = y || -z "$x" ]]; then
-    grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck >> /root/log 2>&1
-    grub-mkconfig -o /boot/grub/grub.cfg >> /root/log 2>&1
+    mkdir /boot/EFI
+    umount -l -q $(cat /root/.efiDisk)
+    mount -q $(cat /root/.efiDisk) /boot/EFI/
+    grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck >> log 2&>1
+    grub-mkconfig -o /boot/grub/grub.cfg >> log 2&>1
     echo -e "> \e[32mGrub was configured\e[0m"
   else
     echo -e "> \e[31mSkipped\e[0m"
@@ -354,11 +355,12 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     cat /etc/X11/xinit/xinitrc | head -n-5 > "$xinit"
     echo "gnome-session" >> "$xinit"
   else
-    echo -e "> \e[31mSkipped\e[0m\n"
+    echo -e "> \e[31mSkipped\e[0m"
   fi
 
   # other
   systemctl enable NetworkManager >> /root/log 2>&1
+  rm -f /root/install /root/.efiDisk
 
 else
 
