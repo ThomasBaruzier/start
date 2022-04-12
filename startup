@@ -151,6 +151,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
   pacstrap /mnt base linux-firmware nano sudo grub efibootmgr dosfstools os-prober mtools networkmanager
   genfstab -U /mnt >> /mnt/etc/fstab
+  hwclock --systohc
 
   # chroot
   read -p $'\nChroot in ? (default=y) : ' x
@@ -357,7 +358,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # other
-  systemctl enable NetworkManager
+  systemctl enable NetworkManager >> /root/log 2>&1
 
 else
 
