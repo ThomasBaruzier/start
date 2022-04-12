@@ -159,10 +159,6 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # init
   echo -e "\nINFO : In chroot, you cannot CTRL+C\nTo exit, \e[31mDO NOT CTRL+Z\e[0m (or it breaks)\nInstead, anwser 'n' to any question\n"
-  read -p 'Setup chroot environnement? (default=y) ' x
-  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
-  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
-  systemctl enable NetworkManager
 
   # region
   while true; do
@@ -333,6 +329,9 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   else
     echo -e "> \e[32mSkipped\e[0m"
   fi
+
+  # other
+  systemctl enable NetworkManager
 
 else
 
