@@ -73,7 +73,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
   # internet check
   echo
-  if ping google.com -c1 >/dev/null 2>&1; then
+  if ping google.com -c1 >> /root/log 2>&1; then
     echo '> Connected to the internet'
   else
     echo -e '> \e[31mERROR : Not connected to the internet. Please verify your connection and try again\e[0m\n'
@@ -122,13 +122,12 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   read -p $'Format ALL disk and setup partitions ?\n\e[31m(WARNING: THERE IS NO COMMING BACK)\e[0m (default=n) : ' x
   [ "$x" != y ] && echo -e '\nAbording...\n' && exit
   efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
-  swap=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux swap' | awk '{print $1}')
   filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
-  echo
   swapoff -a
   umount -q "$filesystem" "$efi"
   dd if=/dev/zero of="$disk" bs=512 count=1 conv=notrunc >> log 2>&1
   echo -e 'g\nn\n\n\n+500M\nn\n\n\n+2G\nn\n\n\n\nt\n1\n1\nt\n2\n19\nw' | fdisk "$disk" >> log 2>&1
+  echo
   fdisk -l "$disk" --color=always | egrep -v -e '^Units' -e '^Sector size' -e '^I/O' -e '^Disk identifier'
   [ "$x" != y ] && echo -e '\nAbording...\n' && exit
 
@@ -145,7 +144,8 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     echo 'Please wait a few minutes...'
     mkfs.fat -F32 "$efi" >> log 2>&1
     mkfs.ext4 "$filesystem" >> log 2>&1
-    mount --mkdir "$efi" /mnt/boot
+    mkdir /boot /boot/EFI
+    mount "$efi" /mnt/boot/EFI
     mount "$filesystem" /mnt
     mkswap "$swap" >> log 2>&1
     swapon "$swap" >> log 2>&1
@@ -156,7 +156,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   read -p $'Install base packages ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
-  pacstrap /mnt base linux-firmware nano sudo grub efibootmgr dosfstools os-prober mtools networkmanager
+  pacstrap /mnt base linux linux-firmware nano sudo grub efibootmgr dosfstools os-prober mtools networkmanager
   genfstab -U /mnt >> /mnt/etc/fstab
 
   # chroot
@@ -164,15 +164,13 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
   cp "$0" /mnt/root/install
-  echo "$efi" > /mnt/root/.efiDisk
   arch-chroot /mnt ./root/install "$efi"
-  cat log >> /mnt/root/log
 
   # reboot
   read -p $'\nReboot ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   if [[ "$x" == n ]]; then
-    echo -e "> \e[32mSkipped\e[0m"
+    echo -e "> \e[31mSkipped\e[0m"
   elif [[ "$x" == y || -z "$x" ]]; then
     swapoff -a
     umount "$filesystem" "$efi"
@@ -249,7 +247,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
       result=$(sed "s:$selected:${selected:1}:" /etc/locale.gen)
       echo "$result" >> /etc/locale.gen
       egrep -o "^[a-z]+[A-Z]{2}" /etc/locale.gen
-      locale-gen >/dev/null
+      locale-gen >> /root/log 2>&1
       echo -e "> \e[32mApplied $(sed 's:UTF-8 UTF-8:UTF-8:' <<< $(egrep "^[a-z]+_[A-Z]{2}" /etc/locale.gen))\e[0m\n"
       break
     else
@@ -287,7 +285,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo -e "> \e[31mSkipped\e[0m"
     user=user
   else
-    useradd -m "$user" 2>/dev/null && \
+    useradd -m "$user" >> /root/log 2>&1 && \
     usermod -aG wheel,audio,video,optical,storage "$user"
     echo -e "> \e[32mAdded user \"$user\"\e[0m"
   fi
@@ -307,10 +305,10 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p $'\nRequest password when user use sudo ? (default=n) ' x
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   if [[ "$x" = n || -z "$x" ]]; then
-    echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' | sudo EDITOR='tee -a' visudo >/dev/null
+    echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' | sudo EDITOR='tee -a' visudo >> /root/log 2>&1
     echo -e "> \e[32mSettings saved\e[0m"
   elif [[ "$x" = y ]]; then
-    echo '%wheel ALL=(ALL:ALL) ALL' | sudo EDITOR='tee -a' visudo >/dev/null
+    echo '%wheel ALL=(ALL:ALL) ALL' | sudo EDITOR='tee -a' visudo >> /root/log 2>&1
     echo -e "> \e[32mSettings saved\e[0m"
   else
     echo -e "> \e[31mSkipped\e[0m"
@@ -334,8 +332,8 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p 'Config grub? (default=y) ' x
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   if [[ "$x" = y || -z "$x" ]]; then
-    grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck >> log 2>&1
-    grub-mkconfig -o /boot/grub/grub.cfg >> log 2>&1
+    grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck >> /root/log 2>&1
+    grub-mkconfig -o /boot/grub/grub.cfg >> /root/log 2>&1
     echo -e "> \e[32mGrub was configured\e[0m"
   else
     echo -e "> \e[31mSkipped\e[0m"
