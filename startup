@@ -181,14 +181,14 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     echo -e "> \e[31mSkipped\e[0m"
   elif [[ "$x" == y || -z "$x" ]]; then
     swapoff -a
-    umount "$filesystem" "$efi"
+    umount "$filesystem" "$efi" >> log 2>&1
+    umount -R /mnt >> log 2>&1
     reboot now
   fi
-  echo 'echo Performing a clean exit...; swapoff -a; umount "$filesystem" "$efi"; sleep 1' > alias
-  source alias
-  rm alias
+  echo 'echo Performing a clean exit...; swapoff -a; umount -R /mnt; sleep 1; reboot" > reboot
+  chmod +x reboot
   echo -e "\n\e[32mScript finished!\e[0m"
-  echo -e "INFO : Aliased 'reboot' for unmount and swapoff\n"
+  echo -e "Execute ./reboot for a clean exit\n"
 
 elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
@@ -350,7 +350,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # typical packages
-  read -p $'\nUpdate and install typical packages ? (default=y) : ' x
+  read -p $'\nUpdate and install typical packages ? (default=y) ' x
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   if [[ "$x" = y || -z "$x" ]]; then
     pacman -Syu git vim jq bc p7zip wget python3 man htop tree file lynx whois base-devel
@@ -359,7 +359,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # personnal packages
-  read -p $'\nInstall personnal packages (Gnome, Xorg, AMD drivers...) ? (default=n) : ' x
+  read -p $'\nInstall personnal packages (Gnome, Xorg, AMD drivers...) ? (default=n) ' x
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   if [[ "$x" = y ]]; then
     pacman -Syu mesa xf86-video-amdgpu vulkan-radeon libva-mesa-driver mesa-vdpau xorg xorg-xinit gnome firefox imagemagick potrace ffmpeg npm go
