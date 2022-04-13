@@ -33,6 +33,7 @@ diskSel() {
 
   efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
   filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
+  umount -l -q "$efi" "$filesystem"
 
 }
 
