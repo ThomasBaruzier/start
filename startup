@@ -123,7 +123,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   [ "$x" != y ] && echo -e '\nAbording...\n' && exit
   echo
   dd if=/dev/zero of="$disk" bs=512 count=1 conv=notrunc >> log 2>&1
-  echo -e 'g\nn\n\n\n+550M\nn\n\n\n+2G\nn\n\n\n\nt\n1\n1\nt\n2\n19\nw' | fdisk "$disk" >> log 2>&1
+  echo -e 'g\nn\n\n\n+500M\nn\n\n\n+2G\nn\n\n\n\nt\n1\n1\nt\n2\n19\nw' | fdisk "$disk" >> log 2>&1
   fdisk -l "$disk" --color=always | egrep -v -e '^Units' -e '^Sector size' -e '^I/O' -e '^Disk identifier'
   [ "$x" != y ] && echo -e '\nAbording...\n' && exit
 
