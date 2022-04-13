@@ -169,11 +169,9 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
   fi
   
+  # reboot
   arch-chroot /mnt ./root/install
   rm -f /mnt/root/install
-  sleep 1
-
-  # reboot
   read -p $'\nReboot ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   if [[ "$x" == n ]]; then
