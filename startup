@@ -355,8 +355,8 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p 'Config grub? (default=y) ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
-    grub-install
-    grub-mkconfig -o /boot/grub/grub.cfg
+    grub-install >> /root/log 2>&1
+    grub-mkconfig -o /boot/grub/grub.cfg >> /root/log 2>&1
     echo -e "> \e[32mGrub was configured\e[0m"
   else
     echo -e "> \e[31mSkipped\e[0m"
