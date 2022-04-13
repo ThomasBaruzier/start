@@ -68,104 +68,109 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   # init
   clear
   read -p $'\e[33mWARNING : this script was made for ARCH ISOs. Otherwise, expect your system to break.\e[0m\nContinue ? (default=n) ' x
-  [ "$x" = chroot ] && cp "$0" /mnt/root/install && arch-chroot /mnt ./root/install && exit
   [ "$x" != y ] && echo -e '\nAbording...\n' && exit
 
-  # internet check
-  echo
-  if ping google.com -c1 >> /root/log 2>&1; then
-    echo '> Connected to the internet'
-  else
-    echo -e '> \e[31mERROR : Not connected to the internet. Please verify your connection and try again\e[0m\n'
-    exit
-  fi
+  if [ "$x" != chroot ]; then
 
-  # sync date
-  timedatectl set-ntp true
-  while timedatectl status | grep -q 'System clock synchronized: no'; do
-    [ "$tries" = 20 ] && echo 'Time clock failed to synchronize... && exit'
-    ((tries++))
-    sleep 0.5
-  done
-  echo -e '> Time clock successfully synchronized\n'
-
-  # disk selection
-  while true; do
-    echo -e 'Disks for installation :\n'
-    diskList=$(fdisk -l)
-    readarray -t disks <<< $(egrep -o '^Disk /dev/[^,]+' <<< "$diskList" | grep -v '^Disk /dev/loop')
-    for ((i=0; i < "${#disks[@]}"; i++)); do
-      choiceList[i]=$(echo "[$i] - $(grep -b1 "${disks[i]}" <<< "$diskList" | tail -n 1 | grep -Po '(?<=: ).+' | sed 's: *$::g') - ${disks[i]:6}")
-    done
-    printf '%s\n' "${choiceList[@]}"
+    # internet check
     echo
-    read -p 'Option (m for more info) (default=0) : ' x
-    echo
-    if [ "$x" = m ]; then
-      clear && fdisk -l
-      continue
-    elif [ "$x" = '' ]; then
-      x=0
-    fi
-    disk="${disks[x]:6}"
-    if [[ -n "$disk" && "$x" =~ [0-9]+ ]]; then
-      disk="/$(egrep -o '^[^: ]+' <<< "$disk")"
-      echo -e "> \e[32mSelected ${choiceList[x]:6}\e[0m\n"
-      break
+    if ping google.com -c1 >> /root/log 2>&1; then
+      echo '> Connected to the internet'
     else
-      echo -e "> \e[31mERROR : Invalid selection\e[0m\n"
+      echo -e '> \e[31mERROR : Not connected to the internet. Please verify your connection and try again\e[0m\n'
+      exit
     fi
 
-  done
+    # sync date
+    timedatectl set-ntp true
+    while timedatectl status | grep -q 'System clock synchronized: no'; do
+      [ "$tries" = 20 ] && echo 'Time clock failed to synchronize... && exit'
+      ((tries++))
+      sleep 0.5
+    done
+    echo -e '> Time clock successfully synchronized\n'
 
-  # partitionning
-  read -p $'Format ALL disk and setup partitions ?\n\e[31m(WARNING: THERE IS NO COMMING BACK)\e[0m (default=n) : ' x
-  [ "$x" != y ] && echo -e '\nAbording...\n' && exit
-  efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
-  filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
-  swapoff -a
-  umount -q "$filesystem" "$efi"
-  dd if=/dev/zero of="$disk" bs=512 count=1 conv=notrunc >> log 2>&1
-  echo -e 'g\nn\n\n\n+500M\nn\n\n\n+2G\nn\n\n\n\nt\n1\n1\nt\n2\n19\nw' | fdisk "$disk" >> log 2>&1
-  echo
-  fdisk -l "$disk" --color=always | egrep -v -e '^Units' -e '^Sector size' -e '^I/O' -e '^Disk identifier'
-  [ "$x" != y ] && echo -e '\nAbording...\n' && exit
+    # disk selection
+    while true; do
+      echo -e 'Disks for installation :\n'
+      diskList=$(fdisk -l)
+      readarray -t disks <<< $(egrep -o '^Disk /dev/[^,]+' <<< "$diskList" | grep -v '^Disk /dev/loop')
+      for ((i=0; i < "${#disks[@]}"; i++)); do
+        choiceList[i]=$(echo "[$i] - $(grep -b1 "${disks[i]}" <<< "$diskList" | tail -n 1 | grep -Po '(?<=: ).+' | sed 's: *$::g') - ${disks[i]:6}")
+      done
+      printf '%s\n' "${choiceList[@]}"
+      echo
+      read -p 'Option (m for more info) (default=0) : ' x
+      echo
+      if [ "$x" = m ]; then
+        clear && fdisk -l
+        continue
+      elif [ "$x" = '' ]; then
+        x=0
+      fi
+      disk="${disks[x]:6}"
+      if [[ -n "$disk" && "$x" =~ [0-9]+ ]]; then
+        disk="/$(egrep -o '^[^: ]+' <<< "$disk")"
+        echo -e "> \e[32mSelected ${choiceList[x]:6}\e[0m\n"
+        break
+      else
+        echo -e "> \e[31mERROR : Invalid selection\e[0m\n"
+      fi
 
-  # filesystems
-  efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
-  swap=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux swap' | awk '{print $1}')
-  filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
-  read -p $'\nMake filesystems ? (default=y) '
-  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
-  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
-  if [[ "$x" = s ]]; then
-      echo -e '\e[31mSkipped\e[0m\n'
-  else
-    echo 'Please wait a few minutes...'
-    mkfs.fat -F32 "$efi" >> log 2>&1
-    mkfs.ext4 "$filesystem" >> log 2>&1
-    mkdir -p /mnt/boot /mnt/boot/EFI
-    mount "$efi" /mnt/boot/EFI
-    mount "$filesystem" /mnt
-    mkswap "$swap" >> log 2>&1
-    swapon "$swap" >> log 2>&1
-    echo -e 'Done\n'
+    done
+
+    # partitionning
+    read -p $'Format ALL disk and setup partitions ?\n\e[31m(WARNING: THERE IS NO COMMING BACK)\e[0m (default=n) : ' x
+    [ "$x" != y ] && echo -e '\nAbording...\n' && exit
+    efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
+    filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
+    swapoff -a
+    umount -q "$filesystem" "$efi"
+    dd if=/dev/zero of="$disk" bs=512 count=1 conv=notrunc >> log 2>&1
+    echo -e 'g\nn\n\n\n+500M\nn\n\n\n+2G\nn\n\n\n\nt\n1\n1\nt\n2\n19\nw' | fdisk "$disk" >> log 2>&1
+    echo
+    fdisk -l "$disk" --color=always | egrep -v -e '^Units' -e '^Sector size' -e '^I/O' -e '^Disk identifier'
+    [ "$x" != y ] && echo -e '\nAbording...\n' && exit
+
+    # filesystems
+    efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
+    swap=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux swap' | awk '{print $1}')
+    filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
+    read -p $'\nMake filesystems ? (default=y) '
+    [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+    [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+    if [[ "$x" = s ]]; then
+        echo -e '\e[31mSkipped\e[0m\n'
+    else
+      echo 'Please wait a few minutes...'
+      mkfs.fat -F32 "$efi" >> log 2>&1
+      mkfs.ext4 "$filesystem" >> log 2>&1
+      mkdir -p /mnt/boot /mnt/boot/EFI
+      mount "$efi" /mnt/boot/EFI
+      mount "$filesystem" /mnt
+      mkswap "$swap" >> log 2>&1
+      swapon "$swap" >> log 2>&1
+      echo -e 'Done\n'
+    fi
+
+    # arch-chroot
+    read -p $'Install base packages ? (default=y) : ' x
+    [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+    [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+    pacstrap /mnt base linux linux-firmware nano sudo grub efibootmgr dosfstools os-prober mtools networkmanager
+    genfstab -U /mnt >> /mnt/etc/fstab
+
+    # chroot
+    read -p $'\nChroot in ? (default=y) : ' x
+    [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+    [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+    cp "$0" /mnt/root/install
+
   fi
-
-  # arch-chroot
-  read -p $'Install base packages ? (default=y) : ' x
-  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
-  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
-  pacstrap /mnt base linux linux-firmware nano sudo grub efibootmgr dosfstools os-prober mtools networkmanager
-  genfstab -U /mnt >> /mnt/etc/fstab
-
-  # chroot
-  read -p $'\nChroot in ? (default=y) : ' x
-  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
-  [ "$x" = n ] && echo -e '\nAbording...\n' && exit
-  cp "$0" /mnt/root/install
+  
   arch-chroot /mnt ./root/install
   rm -f /mnt/root/install
+  sleep 1
 
   # reboot
   read -p $'\nReboot ? (default=y) : ' x
