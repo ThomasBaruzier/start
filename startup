@@ -138,12 +138,13 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
       echo -e '\e[31mSkipped\e[0m\n'
   else
     echo 'Please wait a few minutes...'
-    umount -q -l "$filesystem"
+    umount -q -l "$filesystem" "$efi"
     mkfs.fat -F32 "$efi" >> log 2>&1
+    mkfs.ext4 "$filesystem" >> log 2>&1
+    mount --mkdir "$efi" /mnt/boot
+    mount "$filesystem" /mnt
     mkswap "$swap" >> log 2>&1
     swapon "$swap" >> log 2>&1
-    mkfs.ext4 "$filesystem" >> log 2>&1
-    mount "$filesystem" /mnt
     echo -e 'Done\n'
   fi
 
@@ -153,7 +154,6 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
   pacstrap /mnt base linux-firmware nano sudo grub efibootmgr dosfstools os-prober mtools networkmanager
   genfstab -U /mnt >> /mnt/etc/fstab
-  hwclock --systohc
 
   # chroot
   read -p $'\nChroot in ? (default=y) : ' x
@@ -165,16 +165,19 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   cat log >> /mnt/root/log
 
   # reboot
-  read -p $'\nUnmount and reboot ? (default=y) : ' x
+  read -p $'\nReboot ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
-  if [[ "$x" = n ]]; then
+  if [[ "$x" == n ]]; then
     echo -e "> \e[32mSkipped\e[0m"
-  else
-    umount -l "$filesystem"
+  elif [[ "$x" == y || -z "$x" ]]
+    swapoff -a
+    umount -R /mnt
     reboot now
+  else
+    alias 'reboot' 
+    echo -e "\n\e[32mScript finished!\e[0m"
+    echo -e "INFO : Aliased 'reboot' for unmount and swapoff\n"
   fi
-  echo -e "\n\e[32mScript finished!\e[0m"
-  echo -e "INFO : Please do 'umount -l $filesystem' before rebooting\n"
 
 elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
@@ -213,12 +216,13 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
       break
     elif [[ -f /usr/share/zoneinfo/"$x"/"$y" ]]; then
       echo -e "> \e[32mSelected $y\e[0m"
+      ln -sf /usr/share/zoneinfo/"$x"/"$y" /etc/localtime
+      hwclock --systohc
       break
     else
       echo -e '\n> \e[31mERROR : Invalid input\e[0m'
     fi
   done
-  ln -sf /usr/share/zoneinfo/"$x"/"$y" /etc/localtime
 
   # locale
   while true; do
@@ -326,9 +330,6 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p 'Config grub? (default=y) ' x
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   if [[ "$x" = y || -z "$x" ]]; then
-    mkdir /boot/EFI
-    umount -l -q $(cat /root/.efiDisk)
-    mount -q $(cat /root/.efiDisk) /boot/EFI/
     grub-install --target=x86_64-efi --bootloader-id=grub_uefi --recheck >> log 2>&1
     grub-mkconfig -o /boot/grub/grub.cfg >> log 2>&1
     echo -e "> \e[32mGrub was configured\e[0m"
@@ -364,7 +365,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # other
   systemctl enable NetworkManager >> /root/log 2>&1
-  rm -f /root/install /root/.efiDisk
+  rm -f /root/install
 
 else
 
