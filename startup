@@ -169,7 +169,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   if [[ "$x" == n ]]; then
     echo -e "> \e[32mSkipped\e[0m"
-  elif [[ "$x" == y || -z "$x" ]]
+  elif [[ "$x" == y || -z "$x" ]]; then
     swapoff -a
     umount -R /mnt
     reboot now
