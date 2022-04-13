@@ -205,7 +205,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # init
-  echo -e "\nINFO : In chroot, you cannot CTRL+C\nTo exit, \e[31mDO NOT CTRL+Z\e[0m (or it breaks)\nInstead, anwser 's' (skip) or 'e' (exit) to any question"
+  echo -e "INFO : In chroot, you cannot CTRL+C\nTo exit, \e[31mDO NOT CTRL+Z\e[0m (or it breaks)\nInstead, anwser 's' (skip) or 'e' (exit) to any question"
 
   # region
   while true; do
