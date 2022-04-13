@@ -26,7 +26,7 @@ diskSel() {
       echo -e "> \e[32mSelected ${choiceList[x]:6}\e[0m\n"
       break
     else
-      echo -e "> \e[31mERROR : Invalid selection\e[0m\n"
+      echo -e "> \e[31mERROR : Invalid selection\e[0m"
     fi
 
   done
