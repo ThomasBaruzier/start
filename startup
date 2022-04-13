@@ -272,7 +272,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   if [[ "$host" = s ]]; then
     echo -e "> \e[31mSkipped\e[0m"
   else
-    echo "$x" > /etc/hostname
+    echo "$host" > /etc/hostname
     echo -e "> \e[32mHostname set as $host\e[0m"
   fi
 
