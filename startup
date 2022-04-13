@@ -235,7 +235,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     [ "$x" = e ] && echo -e '\nAbording...\n' && exit
     [ "$x" = '' ] && x=en_US
     if [[ "$x" = s ]]; then
-      echo -e "> \e[31mSkipped\e[0m"
+      echo -e "> \e[31mSkipped\e[0m\n"
       break
     elif [[ -n $(egrep "^#$x" /etc/locale.gen) && "$x" =~ [a-z]+_[A-Z]{2} ]]; then
       selected=$(grep "^#$x" /etc/locale.gen | grep UTF | head -n 1)
