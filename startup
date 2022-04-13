@@ -144,7 +144,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     echo 'Please wait a few minutes...'
     mkfs.fat -F32 "$efi" >> log 2>&1
     mkfs.ext4 "$filesystem" >> log 2>&1
-    mkdir /boot /boot/EFI
+    mkdir -p /mnt/boot /mnt/boot/EFI
     mount "$efi" /mnt/boot/EFI
     mount "$filesystem" /mnt
     mkswap "$swap" >> log 2>&1
