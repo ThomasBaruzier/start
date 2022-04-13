@@ -68,9 +68,10 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   # init
   clear
   read -p $'\e[33mWARNING : this script was made for ARCH ISOs. Otherwise, expect your system to break.\e[0m\nContinue ? (default=n) ' x
-  [ "$x" != y ] && echo -e '\nAbording...\n' && exit
 
   if [ "$x" != chroot ]; then
+  
+    [ "$x" != y ] && echo -e '\nAbording...\n' && exit
 
     # internet check
     echo
