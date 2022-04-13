@@ -164,7 +164,8 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
   [ "$x" = n ] && echo -e '\nAbording...\n' && exit
   cp "$0" /mnt/root/install
-  arch-chroot /mnt ./root/install "$efi"
+  arch-chroot /mnt ./root/install
+  rm -f /mnt/root/install
 
   # reboot
   read -p $'\nReboot ? (default=y) : ' x
@@ -367,7 +368,6 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # other
   systemctl enable NetworkManager >> /root/log 2>&1
-  rm -f /root/install
 
 else
 
