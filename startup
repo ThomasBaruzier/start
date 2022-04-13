@@ -175,11 +175,10 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     swapoff -a
     umount "$filesystem" "$efi"
     reboot now
-  else
-    alias 'reboot' 
-    echo -e "\n\e[32mScript finished!\e[0m"
-    echo -e "INFO : Aliased 'reboot' for unmount and swapoff\n"
   fi
+  alias 'reboot' 
+  echo -e "\n\e[32mScript finished!\e[0m"
+  echo -e "INFO : Aliased 'reboot' for unmount and swapoff\n"
 
 elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
