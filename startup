@@ -4,7 +4,7 @@ diskSel() {
 
   while true; do
  
-    echo -e 'Disks for installation :\n'
+    echo -e '\nDisks for installation :\n'
     diskList=$(fdisk -l)
     readarray -t disks <<< $(egrep -o '^Disk /dev/[^,]+' <<< "$diskList" | grep -v '^Disk /dev/loop')
     for ((i=0; i < "${#disks[@]}"; i++)); do
@@ -31,7 +31,6 @@ diskSel() {
 
   done
 
-  mkdir -p /mnt/boot /mnt/boot/EFI
   efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
   filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
 
@@ -126,7 +125,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
       ((tries++))
       sleep 0.5
     done
-    echo -e '> Time clock successfully synchronized\n'
+    echo -e '> Time clock successfully synchronized'
 
     # disk selection
     diskSel
@@ -179,6 +178,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   fi
 
   # chroot
+  mkdir -p /mnt/boot /mnt/boot/EFI
   mount -q "$filesystem" /mnt >> /root/log 2>&1
   mount -q "$efi" /mnt/boot/EFI >> /root/log 2>&1
   cp "$0" /mnt/root/install
