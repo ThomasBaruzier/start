@@ -185,7 +185,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     umount -R /mnt >> log 2>&1
     reboot now
   fi
-  echo 'echo Performing a clean exit...; swapoff -a; umount -R /mnt; sleep 1; reboot" > reboot
+  echo 'echo Performing a clean exit...; swapoff -a; umount -R /mnt; sleep 1; reboot' > reboot
   chmod +x reboot
   echo -e "\n\e[32mScript finished!\e[0m"
   echo -e "Execute ./reboot for a clean exit\n"
