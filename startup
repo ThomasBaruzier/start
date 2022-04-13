@@ -165,23 +165,25 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     read -p $'\nChroot in ? (default=y) : ' x
     [ "$x" = e ] && echo -e '\nAbording...\n' && exit
     [ "$x" = n ] && echo -e '\nAbording...\n' && exit
-    cp "$0" /mnt/root/install
 
   fi
-  
-  # reboot
+
+  # chroot
+  cp "$0" /mnt/root/install
   arch-chroot /mnt ./root/install
-  rm -f /mnt/root/install
+  rm -f /mnt/root/install  
+
+  # reboot
   read -p $'\nReboot ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nAbording...\n' && exit
-  if [[ "$x" == n ]]; then
+  if [[ "$x" == s ]]; then
     echo -e "> \e[31mSkipped\e[0m"
   elif [[ "$x" == y || -z "$x" ]]; then
     swapoff -a
     umount "$filesystem" "$efi"
     reboot now
   fi
-  alias reboot ='echo Performing a clean exit...; swapoff -a; umount "$filesystem" "$efi"; sleep 1; reboot'
+  alias reboot='echo Performing a clean exit...; swapoff -a; umount "$filesystem" "$efi"; sleep 1; reboot'
   echo -e "\n\e[32mScript finished!\e[0m"
   echo -e "INFO : Aliased 'reboot' for unmount and swapoff\n"
 
