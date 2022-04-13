@@ -213,7 +213,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     ls /usr/share/zoneinfo/
     echo
     read -p 'Region ? (default=Europe) ' x
-    [ "$x" = e ] && echo -e '\nExiting...' && exit
+    [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     [ "$x" = '' ] && x=Europe
     if [[ "$x" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m"
@@ -233,7 +233,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     ls /usr/share/zoneinfo/"$x"
     echo
     read -p 'Location? (default=Paris) ' y
-    [ "$y" = e ] && echo -e '\nExiting...' && exit
+    [ "$y" = e ] && echo -e '\nExiting chroot...' && exit
     [ "$y" = '' ] && y=Paris
     if [[ "$y" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m"
@@ -254,7 +254,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     cat /etc/locale.gen | egrep -o '[a-z]+_[A-Z]{2}' | sort | uniq | column
     echo
     read -p 'Locale? (default=en_US) ' x
-    [ "$x" = e ] && echo -e '\nExiting...' && exit
+    [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     [ "$x" = '' ] && x=en_US
     if [[ "$x" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m\n"
@@ -279,7 +279,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # hostname
   read -p 'Hostname? (default=arch) ' host
-  [ "$host" = e ] && echo -e '\nExiting...' && exit
+  [ "$host" = e ] && echo -e '\nExiting chroot...' && exit
   [ "$host" = '' ] && host=arch
   if [[ "$host" = s ]]; then
     echo -e "> \e[31mSkipped\e[0m"
@@ -290,7 +290,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # root pass
   read -p $'\nRoot password? (default=root) ' x
-  [ "$x" = e ] && echo -e '\nExiting...' && exit
+  [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   [ "$x" = '' ] && x=root
   if [[ "$x" = s ]]; then
     echo -e "> \e[31mSkipped\e[0m"
@@ -301,7 +301,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # user
   read -p $'\nUser name? (default=user) ' user
-  [ "$user" = e ] && echo -e '\nExiting...' && exit
+  [ "$user" = e ] && echo -e '\nExiting chroot...' && exit
   [ "$user" = '' ] && user=user
   if [[ "$user" = s ]]; then
     echo -e "> \e[31mSkipped\e[0m"
@@ -314,7 +314,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # user pass
   read -p $'\nUser password? (default=user) ' x
-  [ "$x" = e ] && echo -e '\nExiting...' && exit
+  [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   [ "$x" = '' ] && x=user
   if [[ "$x" = s ]]; then
     echo -e "> \e[31mSkipped\e[0m"
@@ -325,7 +325,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # sudo
   read -p $'\nRequest password when user use sudo ? (default=n) ' x
-  [ "$x" = e ] && echo -e '\nExiting...' && exit
+  [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = n || -z "$x" ]]; then
     echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' | sudo EDITOR='tee -a' visudo >> /root/log 2>&1
     echo -e "> \e[32mSettings saved\e[0m"
@@ -338,7 +338,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # hosts
   read -p $'\nAutoconfigure hosts file ? (default=y) ' x
-  [ "$x" = e ] && echo -e '\nExiting...' && exit
+  [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = n ]]; then
     nano /etc/hosts
   elif [[ "$x" = y || -z "$x" ]]; then
@@ -352,7 +352,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # grub
   read -p 'Config grub? (default=y) ' x
-  [ "$x" = e ] && echo -e '\nExiting...' && exit
+  [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
     grub-install
     grub-mkconfig -o /boot/grub/grub.cfg
@@ -363,7 +363,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # typical packages
   read -p $'\nUpdate and install typical packages ? (default=y) ' x
-  [ "$x" = e ] && echo -e '\nExiting...' && exit
+  [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
     pacman -Syu git vim jq bc p7zip wget python3 man htop tree file lynx whois base-devel
   else
@@ -372,7 +372,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # personnal packages
   read -p $'\nInstall personnal packages (Gnome, Xorg, AMD drivers...) ? (default=n) ' x
-  [ "$x" = e ] && echo -e '\nExiting...' && exit
+  [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y ]]; then
     pacman -Syu mesa xf86-video-amdgpu vulkan-radeon libva-mesa-driver mesa-vdpau xorg xorg-xinit gnome firefox imagemagick potrace ffmpeg npm go
 #    git clone https://aur.archlinux.org/yay-git.git
