@@ -71,7 +71,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
   if [ "$x" != chroot ]; then
   
-    [ "$x" != y ] && echo -e '\nAbording...\n' && exit
+    [ "$x" != y ] && echo -e '\nExiting...\n' && exit
 
     # internet check
     echo
@@ -122,34 +122,31 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
     # partitionning
     read -p $'Format ALL disk and setup partitions ?\n\e[31m(WARNING: THERE IS NO COMMING BACK)\e[0m (default=n) : ' x
-    [ "$x" != y ] && echo -e '\nAbording...\n' && exit
+    [ "$x" != y ] && echo -e '\nExiting...\n' && exit
     efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
     filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
     swapoff -a
-    umount -q "$filesystem" "$efi"
     dd if=/dev/zero of="$disk" bs=512 count=1 conv=notrunc >> log 2>&1
     echo -e 'g\nn\n\n\n+500M\nn\n\n\n+2G\nn\n\n\n\nt\n1\n1\nt\n2\n19\nw' | fdisk "$disk" >> log 2>&1
     echo
     fdisk -l "$disk" --color=always | egrep -v -e '^Units' -e '^Sector size' -e '^I/O' -e '^Disk identifier'
-    [ "$x" != y ] && echo -e '\nAbording...\n' && exit
+    [ "$x" != y ] && echo -e '\nExiting...\n' && exit
 
     # filesystems
     efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
     swap=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux swap' | awk '{print $1}')
     filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
     read -p $'\nMake filesystems ? (default=y) '
-    [ "$x" = e ] && echo -e '\nAbording...\n' && exit
-    [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+    [ "$x" = e ] && echo -e '\nExiting...\n' && exit
+    [ "$x" = n ] && echo -e '\nExiting...\n' && exit
     if [[ "$x" = s ]]; then
         echo -e '\e[31mSkipped\e[0m\n'
     else
       echo 'Please wait a few minutes...'
       mkfs.fat -F32 "$efi" >> log 2>&1
       mkfs.ext4 "$filesystem" >> log 2>&1
-      mkdir -p /mnt/boot
-      mkdir -p /mnt/boot/EFI
-      mount "$efi" /mnt/boot/EFI
-      mount "$filesystem" /mnt
+      mkdir -p /mnt/boot /mnt/boot/EFI
+      mount "$filesystem" /mnt >> log 2>&1
       mkswap "$swap" >> log 2>&1
       swapon "$swap" >> log 2>&1
       echo -e 'Done\n'
@@ -157,15 +154,15 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
     # arch-chroot
     read -p $'Install base packages ? (default=y) : ' x
-    [ "$x" = e ] && echo -e '\nAbording...\n' && exit
-    [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+    [ "$x" = e ] && echo -e '\nExiting...\n' && exit
+    [ "$x" = n ] && echo -e '\nExiting...\n' && exit
     pacstrap /mnt base linux linux-firmware nano sudo grub efibootmgr dosfstools os-prober mtools networkmanager
     genfstab -U /mnt >> /mnt/etc/fstab
 
     # chroot
     read -p $'\nChroot in ? (default=y) : ' x
-    [ "$x" = e ] && echo -e '\nAbording...\n' && exit
-    [ "$x" = n ] && echo -e '\nAbording...\n' && exit
+    [ "$x" = e ] && echo -e '\nExiting...\n' && exit
+    [ "$x" = n ] && echo -e '\nExiting...\n' && exit
 
   fi
 
@@ -176,14 +173,14 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
   # reboot
   read -p $'\nReboot ? (default=y) : ' x
-  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = e ] && echo -e '\nExiting...\n' && exit
   if [[ "$x" == s ]]; then
     echo -e "> \e[31mSkipped\e[0m"
   elif [[ "$x" == y || -z "$x" ]]; then
     swapoff -a
     umount "$filesystem" "$efi" >> log 2>&1
     umount -R /mnt >> log 2>&1
-    reboot now
+    reboot
   fi
   echo 'echo Performing a clean exit...; swapoff -a; umount -R /mnt; sleep 1; reboot' > reboot
   chmod +x reboot
@@ -201,7 +198,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     ls /usr/share/zoneinfo/
     echo
     read -p 'Region ? (default=Europe) ' x
-    [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+    [ "$x" = e ] && echo -e '\nExiting...' && exit
     [ "$x" = '' ] && x=Europe
     if [[ "$x" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m"
@@ -221,7 +218,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     ls /usr/share/zoneinfo/"$x"
     echo
     read -p 'Location? (default=Paris) ' y
-    [ "$y" = e ] && echo -e '\nAbording...\n' && exit
+    [ "$y" = e ] && echo -e '\nExiting...' && exit
     [ "$y" = '' ] && y=Paris
     if [[ "$y" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m"
@@ -242,7 +239,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     cat /etc/locale.gen | egrep -o '[a-z]+_[A-Z]{2}' | sort | uniq | column
     echo
     read -p 'Locale? (default=en_US) ' x
-    [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+    [ "$x" = e ] && echo -e '\nExiting...' && exit
     [ "$x" = '' ] && x=en_US
     if [[ "$x" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m\n"
@@ -267,7 +264,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # hostname
   read -p 'Hostname? (default=arch) ' host
-  [ "$host" = e ] && echo -e '\nAbording...\n' && exit
+  [ "$host" = e ] && echo -e '\nExiting...' && exit
   [ "$host" = '' ] && host=arch
   if [[ "$host" = s ]]; then
     echo -e "> \e[31mSkipped\e[0m"
@@ -278,7 +275,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # root pass
   read -p $'\nRoot password? (default=root) ' x
-  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = e ] && echo -e '\nExiting...' && exit
   [ "$x" = '' ] && x=root
   if [[ "$x" = s ]]; then
     echo -e "> \e[31mSkipped\e[0m"
@@ -289,7 +286,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # user
   read -p $'\nUser name? (default=user) ' user
-  [ "$user" = e ] && echo -e '\nAbording...\n' && exit
+  [ "$user" = e ] && echo -e '\nExiting...' && exit
   [ "$user" = '' ] && user=user
   if [[ "$user" = s ]]; then
     echo -e "> \e[31mSkipped\e[0m"
@@ -302,7 +299,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # user pass
   read -p $'\nUser password? (default=user) ' x
-  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = e ] && echo -e '\nExiting...' && exit
   [ "$x" = '' ] && x=user
   if [[ "$x" = s ]]; then
     echo -e "> \e[31mSkipped\e[0m"
@@ -313,7 +310,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # sudo
   read -p $'\nRequest password when user use sudo ? (default=n) ' x
-  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = e ] && echo -e '\nExiting...' && exit
   if [[ "$x" = n || -z "$x" ]]; then
     echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' | sudo EDITOR='tee -a' visudo >> /root/log 2>&1
     echo -e "> \e[32mSettings saved\e[0m"
@@ -326,7 +323,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # hosts
   read -p $'\nAutoconfigure hosts file ? (default=y) ' x
-  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = e ] && echo -e '\nExiting...' && exit
   if [[ "$x" = n ]]; then
     nano /etc/hosts
   elif [[ "$x" = y || -z "$x" ]]; then
@@ -340,10 +337,13 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # grub
   read -p 'Config grub? (default=y) ' x
-  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = e ] && echo -e '\nExiting...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
-    grub-install >> /root/log 2>&1
-    grub-mkconfig -o /boot/grub/grub.cfg >> /root/log 2>&1
+    efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
+    mkdir -p /mnt/boot /mnt/boot/EFI
+    mount "$efi" /mnt/boot/EFI >> /root/log 2>&1
+    grub-install
+    grub-mkconfig -o /boot/grub/grub.cfg
     echo -e "> \e[32mGrub was configured\e[0m"
   else
     echo -e "> \e[31mSkipped\e[0m"
@@ -351,7 +351,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # typical packages
   read -p $'\nUpdate and install typical packages ? (default=y) ' x
-  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = e ] && echo -e '\nExiting...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
     pacman -Syu git vim jq bc p7zip wget python3 man htop tree file lynx whois base-devel
   else
@@ -360,7 +360,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # personnal packages
   read -p $'\nInstall personnal packages (Gnome, Xorg, AMD drivers...) ? (default=n) ' x
-  [ "$x" = e ] && echo -e '\nAbording...\n' && exit
+  [ "$x" = e ] && echo -e '\nExiting...' && exit
   if [[ "$x" = y ]]; then
     pacman -Syu mesa xf86-video-amdgpu vulkan-radeon libva-mesa-driver mesa-vdpau xorg xorg-xinit gnome firefox imagemagick potrace ffmpeg npm go
 #    git clone https://aur.archlinux.org/yay-git.git
