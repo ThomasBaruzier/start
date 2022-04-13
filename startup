@@ -171,6 +171,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     read -p $'\nChroot in ? (default=y) : ' x
     [ "$x" = e ] && echo -e '\nExiting...\n' && exit
     [ "$x" = n ] && echo -e '\nExiting...\n' && exit
+    echo
 
   else
 
