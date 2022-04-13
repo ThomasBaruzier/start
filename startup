@@ -1,5 +1,42 @@
 #!/bin/bash
 
+diskSel() {
+{
+  while true; do
+ 
+    echo -e 'Disks for installation :\n'
+    diskList=$(fdisk -l)
+    readarray -t disks <<< $(egrep -o '^Disk /dev/[^,]+' <<< "$diskList" | grep -v '^Disk /dev/loop')
+    for ((i=0; i < "${#disks[@]}"; i++)); do
+      choiceList[i]=$(echo "[$i] - $(grep -b1 "${disks[i]}" <<< "$diskList" | tail -n 1 | grep -Po '(?<=: ).+' | sed 's: *$::g') - ${disks[i]:6}")
+    done
+    printf '%s\n' "${choiceList[@]}"
+    echo
+    read -p 'Option (m for more info) (default=0) : ' x
+    echo
+    if [ "$x" = m ]; then
+     clear && fdisk -l
+     continue
+    elif [ "$x" = '' ]; then
+      x=0
+    fi
+    disk="${disks[x]:6}"
+    if [[ -n "$disk" && "$x" =~ [0-9]+ ]]; then
+      disk="/$(egrep -o '^[^: ]+' <<< "$disk")"
+      echo -e "> \e[32mSelected ${choiceList[x]:6}\e[0m\n"
+      break
+    else
+      echo -e "> \e[31mERROR : Invalid selection\e[0m\n"
+    fi
+
+  done
+
+  mkdir -p /mnt/boot /mnt/boot/EFI
+  efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
+  filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
+
+}
+
 if whoami | grep -q 'u0_'; then # Termux
 
   # init
@@ -92,43 +129,14 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     echo -e '> Time clock successfully synchronized\n'
 
     # disk selection
-    while true; do
-      echo -e 'Disks for installation :\n'
-      diskList=$(fdisk -l)
-      readarray -t disks <<< $(egrep -o '^Disk /dev/[^,]+' <<< "$diskList" | grep -v '^Disk /dev/loop')
-      for ((i=0; i < "${#disks[@]}"; i++)); do
-        choiceList[i]=$(echo "[$i] - $(grep -b1 "${disks[i]}" <<< "$diskList" | tail -n 1 | grep -Po '(?<=: ).+' | sed 's: *$::g') - ${disks[i]:6}")
-      done
-      printf '%s\n' "${choiceList[@]}"
-      echo
-      read -p 'Option (m for more info) (default=0) : ' x
-      echo
-      if [ "$x" = m ]; then
-        clear && fdisk -l
-        continue
-      elif [ "$x" = '' ]; then
-        x=0
-      fi
-      disk="${disks[x]:6}"
-      if [[ -n "$disk" && "$x" =~ [0-9]+ ]]; then
-        disk="/$(egrep -o '^[^: ]+' <<< "$disk")"
-        echo -e "> \e[32mSelected ${choiceList[x]:6}\e[0m\n"
-        break
-      else
-        echo -e "> \e[31mERROR : Invalid selection\e[0m\n"
-      fi
-
-    done
-
+    diskSel
+  
     # partitionning
     read -p $'Format ALL disk and setup partitions ?\n\e[31m(WARNING: THERE IS NO COMMING BACK)\e[0m (default=n) : ' x
     [ "$x" != y ] && echo -e '\nExiting...\n' && exit
-    efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
-    filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
-    swapoff -a
     dd if=/dev/zero of="$disk" bs=512 count=1 conv=notrunc >> log 2>&1
-    echo -e 'g\nn\n\n\n+500M\nn\n\n\n+2G\nn\n\n\n\nt\n1\n1\nt\n2\n19\nw' | fdisk "$disk" >> log 2>&1
-    echo
+    swapoff -a
+    echo; echo -e 'g\nn\n\n\n+500M\nn\n\n\n+2G\nn\n\n\n\nt\n1\n1\nt\n2\n19\nw' | fdisk "$disk" >> log 2>&1
     fdisk -l "$disk" --color=always | egrep -v -e '^Units' -e '^Sector size' -e '^I/O' -e '^Disk identifier'
     [ "$x" != y ] && echo -e '\nExiting...\n' && exit
 
@@ -164,12 +172,18 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     [ "$x" = e ] && echo -e '\nExiting...\n' && exit
     [ "$x" = n ] && echo -e '\nExiting...\n' && exit
 
+  else
+
+    diskSel  
+
   fi
 
   # chroot
+  mount -q "$filesystem" /mnt >> /root/log 2>&1
+  mount -q "$efi" /mnt/boot/EFI >> /root/log 2>&1
   cp "$0" /mnt/root/install
   arch-chroot /mnt ./root/install
-  rm -f /mnt/root/install  
+  rm -f /mnt/root/install /mnt/root/.efiDisk
 
   # reboot
   read -p $'\nReboot ? (default=y) : ' x
@@ -339,9 +353,6 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p 'Config grub? (default=y) ' x
   [ "$x" = e ] && echo -e '\nExiting...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
-    efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
-    mkdir -p /mnt/boot /mnt/boot/EFI
-    mount "$efi" /mnt/boot/EFI >> /root/log 2>&1
     grub-install
     grub-mkconfig -o /boot/grub/grub.cfg
     echo -e "> \e[32mGrub was configured\e[0m"
