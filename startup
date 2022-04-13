@@ -176,7 +176,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     umount "$filesystem" "$efi"
     reboot now
   fi
-  alias 'reboot' 
+  alias reboot ='echo Performing a clean exit...; swapoff -a; umount "$filesystem" "$efi"; sleep 1; reboot'
   echo -e "\n\e[32mScript finished!\e[0m"
   echo -e "INFO : Aliased 'reboot' for unmount and swapoff\n"
 
@@ -205,6 +205,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   done
 
   # city
+  [ "$x" != s ] && \
   while true; do
     echo
     ls /usr/share/zoneinfo/"$x"
@@ -212,7 +213,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     read -p 'Location? (default=Paris) ' y
     [ "$y" = e ] && echo -e '\nAbording...\n' && exit
     [ "$y" = '' ] && y=Paris
-    if [[ "$x" = s ]]; then
+    if [[ "$y" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m"
       break
     elif [[ -f /usr/share/zoneinfo/"$x"/"$y" ]]; then
