@@ -121,7 +121,12 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   # partitionning
   read -p $'Format ALL disk and setup partitions ?\n\e[31m(WARNING: THERE IS NO COMMING BACK)\e[0m (default=n) : ' x
   [ "$x" != y ] && echo -e '\nAbording...\n' && exit
+  efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
+  swap=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux swap' | awk '{print $1}')
+  filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
   echo
+  swapoff -a
+  umount -q "$filesystem" "$efi"
   dd if=/dev/zero of="$disk" bs=512 count=1 conv=notrunc >> log 2>&1
   echo -e 'g\nn\n\n\n+500M\nn\n\n\n+2G\nn\n\n\n\nt\n1\n1\nt\n2\n19\nw' | fdisk "$disk" >> log 2>&1
   fdisk -l "$disk" --color=always | egrep -v -e '^Units' -e '^Sector size' -e '^I/O' -e '^Disk identifier'
@@ -138,7 +143,6 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
       echo -e '\e[31mSkipped\e[0m\n'
   else
     echo 'Please wait a few minutes...'
-    umount -q -l "$filesystem" "$efi"
     mkfs.fat -F32 "$efi" >> log 2>&1
     mkfs.ext4 "$filesystem" >> log 2>&1
     mount --mkdir "$efi" /mnt/boot
@@ -171,7 +175,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     echo -e "> \e[32mSkipped\e[0m"
   elif [[ "$x" == y || -z "$x" ]]; then
     swapoff -a
-    umount -R /mnt
+    umount "$filesystem" "$efi"
     reboot now
   else
     alias 'reboot' 
