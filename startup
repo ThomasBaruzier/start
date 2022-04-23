@@ -104,7 +104,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
   # init
   clear
-  read -p $'\e[33mWARNING : this script was made for ARCH ISOs. Otherwise, expect your system to break.\e[0m\nContinue ? (default=n) ' x
+  read -p $'\e[33mWARNING : this script was made for ARCH ISOs. Otherwise, expect your system to break.\e[0m\nAlso, there is a high chance you break your system by skipping steps or setting up multiple users.\nContinue ? (default=n) ' x
 
   if [ "$x" != chroot ]; then
   
@@ -293,7 +293,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
       echo -e "> \e[32mPermanent keymap set as "$x"\e[0m\n"
       break
     else
-      echo -e '\n> \e[31mERROR : Invalid input\e[0m'
+      echo -e '> \e[31mERROR : Invalid input\e[0m\n'
     fi
   done
 
@@ -341,6 +341,17 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   else
     echo "$user:$x" | chpasswd
     echo -e "> \e[32mPassword for "$user" user set\e[0m"
+  fi
+
+  # auto login
+  read -p $'\nAuto login? (default=y) ' x
+  [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
+  [ "$x" = '' ] && x=user
+  if [[ "$x" = s ]]; then
+    echo -e "> \e[31mSkipped\e[0m"
+  else
+    sed -i.bak 's:ExecStart=.*:ExecStart=-/sbin/agetty -a $(ls /home | head -n 1) %I $TERM:' /usr/lib/systemd/system/getty@.service
+    echo -e "> \e[32mAuto login on for $(ls /home | head -n 1)\e[0m"
   fi
 
   # sudo
