@@ -346,12 +346,11 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   # auto login
   read -p $'\nAuto login? (default=y) ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
-  [ "$x" = '' ] && x=user
-  if [[ "$x" = s ]]; then
-    echo -e "> \e[31mSkipped\e[0m"
-  else
+  if [[ "$x" = y || -z "$x" ]]; then
     sed -i.bak 's:ExecStart=.*:ExecStart=-/sbin/agetty -a $(ls /home | head -n 1) %I $TERM:' /usr/lib/systemd/system/getty@.service
     echo -e "> \e[32mAuto login on for $(ls /home | head -n 1)\e[0m"
+  else
+    echo -e "> \e[31mSkipped\e[0m"
   fi
 
   # sudo
