@@ -280,7 +280,6 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
 # keymap
   while true; do
-    echo
     echo $(localectl list-keymaps | egrep -o '^..$') | column
     echo
     read -p 'Keymap? (default=fr) ' x
