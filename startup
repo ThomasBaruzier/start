@@ -289,7 +289,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
       echo -e "> \e[31mSkipped\e[0m\n"
       break
     elif [[ -n $(localectl list-keymaps | egrep -o '^..$' | grep "$x") ]]; then
-      localectl set-keymap --no-convert "$x"
+      echo "KEYMAP=$x" > /etc/vconsole.conf
       echo -e "> \e[32mPermanent keymap set as "$x"\e[0m\n"
       break
     else
@@ -382,7 +382,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # typical packages
-  read -p $'\nUpdate and install typical packages ? (default=y) ' x
+  read -p $'\nUpdate and install TyraVex's packages ? (default=y) ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
     pacman -Syu git vim jq bc p7zip wget python3 man htop tree file lynx whois base-devel python-pip linux-headers firefox imagemagick potrace inkscape ffmpeg npm go mediainfo
