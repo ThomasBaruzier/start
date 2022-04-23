@@ -347,7 +347,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p $'\nAuto login? (default=y) ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
-    sed -i.bak 's:ExecStart=.*:ExecStart=-/sbin/agetty -a $(ls /home | head -n 1) %I $TERM:' /usr/lib/systemd/system/getty@.service
+    sed -i 's:ExecStart.*:ExecStart=-/sbin/agetty -a '"$(ls /home --color=never | head -n 1)"' %I $TERM' /usr/lib/systemd/system/getty@.service
     echo -e "> \e[32mAuto login on for $(ls /home | head -n 1)\e[0m"
   else
     echo -e "> \e[31mSkipped\e[0m"
