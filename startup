@@ -394,7 +394,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p $'\nUpdate and install typical packages ? (default=y) ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
-    pacman -Syu git vim jq bc p7zip wget python3 man htop tree file lynx whois base-devel python-pip linux-headers firefox imagemagick potrace inkscape ffmpeg npm go mediainfo
+    pacman -Syu git vim jq bc p7zip wget python3 man htop tree file lynx whois base-devel python-pip linux-headers firefox imagemagick potrace inkscape ffmpeg npm go mediainfo jdk-openjdk
   else
     echo -e "> \e[31mSkipped\e[0m"
   fi
