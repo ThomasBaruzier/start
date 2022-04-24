@@ -344,10 +344,10 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # auto login
-  read -p $'\nAuto login? (default=y) ' x
+  read -p $'\nAuto login ? (default=y) ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
-    sed -i 's:ExecStart.*:ExecStart=-/sbin/agetty -a '"$(ls /home --color=never | head -n 1)"' %I $TERM' /usr/lib/systemd/system/getty@.service
+    echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty -o '-p -f -- \\\\\u' --noclear --autologin tyra - \$TERM" > /etc/systemd/system/getty@tty1.service.d/autologin.conf
     echo -e "> \e[32mAuto login on for $(ls /home | head -n 1)\e[0m"
   else
     echo -e "> \e[31mSkipped\e[0m"
@@ -391,7 +391,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo -e "> \e[31mSkipped\e[0m"
   fi
 
-  # typical packages
+  # personnal packages
   read -p $'\nUpdate and install TyraVex\'s packages ? (default=y) ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
@@ -400,7 +400,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo -e "> \e[31mSkipped\e[0m"
   fi
 
-  # personnal packages
+  # drivers + xorg
   read -p $'\nInstall AMD drivers and Xorg ? (default=y) ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
