@@ -190,9 +190,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   # reboot
   read -p $'\nReboot ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nExiting...\n' && exit
-  if [[ "$x" == s ]]; then
-    echo -e "> \e[31mSkipped\e[0m"
-  elif [[ "$x" == y || -z "$x" ]]; then
+  if [[ "$x" == y || -z "$x" ]]; then
     swapoff -a
     umount "$filesystem" "$efi" >> log 2>&1
     umount -R /mnt >> log 2>&1
@@ -347,6 +345,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p $'\nAuto login ? (default=y) ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
+    mkdir -p /etc/systemd/system/getty@tty1.service.d
     echo -e "[Service]\nExecStart=\nExecStart=-/sbin/agetty -o '-p -f -- \\\\\u' --noclear --autologin $(ls /home | head -n 1) - \$TERM" > /etc/systemd/system/getty@tty1.service.d/autologin.conf
     echo -e "> \e[32mAuto login on for $(ls /home | head -n 1)\e[0m"
   else
