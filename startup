@@ -390,8 +390,8 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo -e "> \e[31mSkipped\e[0m"
   fi
 
-  # personnal packages
-  read -p $'\nUpdate and install TyraVex\'s packages ? (default=y) ' x
+  # typical packages
+  read -p $'\nUpdate and install typical packages ? (default=y) ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
     pacman -Syu git vim jq bc p7zip wget python3 man htop tree file lynx whois base-devel python-pip linux-headers firefox imagemagick potrace inkscape ffmpeg npm go mediainfo
@@ -399,14 +399,38 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo -e "> \e[31mSkipped\e[0m"
   fi
 
-  # drivers + xorg
-  read -p $'\nInstall AMD drivers and Xorg ? (default=y) ' x
+  # backup
+  read -p $'\nDownload and extract /home backup ? (default=y) ' x
+  [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
+  if echo "$x" | egrep -q '.{8,}'; then
+    curl -# -L 'go.ly/bkp-prv' -o backup.7z && \
+    7z x backup.7z -o"/home/$(ls /home | head -n 1)" -p"$x" -y
+  elif [[ "$x" = y || -z "$x" ]]; then
+    curl -# -L 'go.ly/bkp-pub' -o backup.7z && \
+    7z x backup.7z -o"/home/$(ls /home | head -n 1)" -y
+  else
+    echo -e "> \e[31mSkipped\e[0m"
+  fi
+  rm -rf backup.7z
+
+  # desktop environment
+  read -p $'\nInstall AMD drivers, Xorg, and Gnome ? (default=y) ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
-    pacman -Syu mesa xf86-video-amdgpu vulkan-radeon libva-mesa-driver mesa-vdpau xorg xorg-xinit
+    pacman -Syu mesa xf86-video-amdgpu vulkan-radeon libva-mesa-driver mesa-vdpau xorg xorg-xinit gnome
     xinit="/home/$(ls /home | head -n 1)/.xinitrc"
     cat /etc/X11/xinit/xinitrc | head -n-5 > "$xinit"
-#    echo "gnome-session" >> "$xinit"
+    echo "gnome-session" >> "$xinit"
+  else
+    echo -e "> \e[31mSkipped\e[0m"
+  fi
+
+  read -p $'\nSetup broadcom-wl-dkms driver ? (default=y) ' x
+  [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
+  if [[ "$x" = y || -z "$x" ]]; then
+    pacman -Syu broadcom-wl-dkms
+    rmmod b43 b43legacy ssb bcm43xx brcm80211 brcmfmac brcmsmac bcma wl
+    modprobe wl
   else
     echo -e "> \e[31mSkipped\e[0m"
   fi
@@ -427,3 +451,4 @@ else
   echo 'Platform not supported yet'
 
 fi
+
