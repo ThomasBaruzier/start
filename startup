@@ -322,7 +322,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # keymap
   while true; do
-    if [[ -z "$check" ]] then;
+    if [[ -z "$check" ]]; then
       readarray -t rawKeymaps <<< $(find /usr/share/kbd/keymaps -type f -printf "%f\n")
       for i in "${rawKeymaps[@]}"; do
         allKeymaps+=("${i%%.*}");
