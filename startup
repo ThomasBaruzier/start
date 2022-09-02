@@ -331,7 +331,8 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     done
     printf '%s\n' "${filteredKeymaps[@]}" | sort | column
     echo
-    read -p 'Keymap? (default=fr) (more options=all)' x
+    read -p 'Keymap? (default=fr) (more options=all) : ' x
+    echo
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     [ "$x" = all ] && printf '%s\n' "${allKeymaps[@]}" | sort | column | less && continue
     [ "$x" = '' ] && x=fr
