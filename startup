@@ -227,6 +227,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   mount "$filesystem" /mnt >> log 2>&1
   mount --mkdir "$efi" /mnt/boot/EFI >> log 2>&1
   cp "$0" /mnt/root/install
+  chmod +x /mnt/root/install
   arch-chroot /mnt ./root/install
   rm -f /mnt/root/install /mnt/root/.efiDisk
 
