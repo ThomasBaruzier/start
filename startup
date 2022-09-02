@@ -320,19 +320,27 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     fi
   done
 
-# keymap
+  # keymap
   while true; do
-    echo $(localectl list-keymaps | egrep -o '^..$') | column
+    readarray -t rawKeymaps <<< $(find /usr/share/kbd/keymaps -type f -printf "%f\n")
+    for i in "${rawKeymaps[@]}"; do
+      allKeymaps+=("${i%%.*}");
+      if [[ "${allKeymaps[@]: -1}" =~ ^[a-z]{2}$ ]]; then
+        filteredKeymaps+=("${i%%.*}")
+      fi
+    done
+    printf '%s\n' "${filteredKeymaps[@]}" | sort | column
     echo
-    read -p 'Keymap? (default=fr) ' x
+    read -p 'Keymap? (default=fr) (more options=all)' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
+    [ "$x" = all ] && printf '%s\n' "${allKeymaps[@]}" | sort | column | less && continue
     [ "$x" = '' ] && x=fr
     if [[ "$x" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m\n"
       break
-    elif [[ -n $(localectl list-keymaps | egrep -o '^..$' | grep "$x") ]]; then
+    elif [[ -n $(printf '%s\n' "${allKeymaps[@]}" | egrep '^'"$x"'$') ]]; then
       echo "KEYMAP=$x" > /etc/vconsole.conf
-      echo -e "> \e[32mPermanent keymap set as "$x"\e[0m\n"
+      echo -e "> \e[32mPermanent keymap set as $x\e[0m\n"
       break
     else
       echo -e '> \e[31mERROR : Invalid input\e[0m\n'
