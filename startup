@@ -3,7 +3,7 @@
 diskSel() {
 
   while true; do
- 
+
     echo -e '\nDisks for installation :\n'
     diskList=$(fdisk -l)
     readarray -t disks <<< $(egrep -o '^Disk /dev/[^,]+' <<< "$diskList" | grep -v '^Disk /dev/loop')
@@ -58,10 +58,10 @@ if whoami | grep -q 'u0_'; then # Termux
   # packages
   echo -en "\ninstall packages? : "
   read x; [ "$x" = y ] && \
-  apt install wget nano python3 p7zip \
+  apt install wget nano python3 p7zip zip \
       proot-distro git wget man htop tree \
       nodejs ffmpeg file lynx jq bc whois \
-      imagemagick potrace iproute2 \
+      imagemagick potrace iproute2 mediainfo \
       -o DPkg::Options::="--force-confnew" -y && \
       npm install peerflix -g
 
@@ -89,7 +89,8 @@ if whoami | grep -q 'u0_'; then # Termux
   echo -en "\ninstall pip and its packages? : "
   read x; [ "$x" = y ] && \
   python3 -m pip install --upgrade pip && \
-  pip install yt-dlp spotdl
+  pip install rapidfuzz==1.9.1
+  pip install yt-dlp spotdl instaloader
 
   # vm
   echo -en "\ninstall ubuntu vm? : "
@@ -107,7 +108,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   read -p $'\e[33mWARNING : this script was made for ARCH ISOs. Otherwise, expect your system to break.\nAlso, there is a high chance you break your system by skipping steps or setting up multiple users.\e[0m\nContinue ? (default=n) ' x
 
   if [ "$x" != chroot ]; then
-  
+
     [ "$x" != y ] && echo -e '\nExiting...\n' && exit
 
     # internet check
@@ -130,7 +131,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
     # disk selection
     diskSel
-  
+
     # partitionning
     read -p $'Format ALL disk and setup partitions ?\n\e[31m(WARNING: THERE IS NO COMMING BACK)\e[0m (default=n) : ' x
     [ "$x" != y ] && echo -e '\nExiting...\n' && exit
