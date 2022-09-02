@@ -147,7 +147,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
         efiSize="+${efiSize^^}"
         break
       else
-        echo -e '\n> \e[31mERROR : Invalid input\e[0m'
+        echo -e '\n> \e[31mERROR : Invalid input\e[0m\n'
       fi
     done
 
@@ -161,7 +161,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
         swapSize="+${swapSize^^}"
         break
       else
-        echo -e '\n> \e[31mERROR : Invalid input\e[0m'
+        echo -e '\n> \e[31mERROR : Invalid input\e[0m\n'
       fi
     done
 
@@ -175,7 +175,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
         rootSize="+${rootSize^^}"
         break
       else
-        echo -e '\n> \e[31mERROR : Invalid input\e[0m'
+        echo -e '\n> \e[31mERROR : Invalid input\e[0m\n'
       fi
     done
 
