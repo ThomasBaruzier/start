@@ -296,9 +296,9 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo
     cat /etc/locale.gen | egrep -o '[a-z]+_[A-Z]{2}' | sort | uniq | column
     echo
-    read -p 'Locale? (default=en_US) ' x
+    read -p 'Locale? (default=fr_FR) ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
-    [ "$x" = '' ] && x=en_US
+    [ "$x" = '' ] && x=fr_FR
     if [[ "$x" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m\n"
       break
