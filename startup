@@ -179,10 +179,10 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
       fi
     done
 
-    echo
     swapoff -a
     dd if=/dev/zero of="$disk" bs=512 count=1 conv=notrunc >> log 2>&1
     echo -e "g\nn\n\n\n${efiSize}\nn\n\n\n${swapSize}\nn\n\n\n${rootSize}\nt\n1\n1\nt\n2\n19\nw" | fdisk "$disk" >> log 2>&1
+    echo -e "\n\e[31mResults :\e[0m\n"
     fdisk -l "$disk" --color=always | egrep -v -e '^Units' -e '^Sector size' -e '^I/O' -e '^Disk identifier'
 
     # filesystems
