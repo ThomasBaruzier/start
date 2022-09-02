@@ -138,7 +138,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     echo
 
     while true; do
-      read -p $'\e[34mEFI SYSTEM\e[0m partition size (default:512M) : ' efiSize
+      read -p $'\e[35mEFI SYSTEM\e[0m partition size (default:512M) : ' efiSize
       [ "$efiSize" = e ] && echo -e '\nExiting...' && exit
       if [[ -z "$efiSize" ]]; then
         efiSize='+512M'
@@ -152,7 +152,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     done
 
     while true; do
-      read -p $'\e[34mSWAP\e[0m partition size (default:2G) : ' swapSize
+      read -p $'\e[35mSWAP\e[0m partition size (default:2G) : ' swapSize
       [ "$swapSize" = e ] && echo -e '\nExiting...' && exit
       if [[ -z "$swapSize" ]]; then
         swapSize='+2G'
@@ -166,7 +166,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     done
 
     while true; do
-      read -p $'\e[34mROOT\e[0m partition size (default:remaining disk space) : ' rootSize
+      read -p $'\e[35mROOT\e[0m partition size (default:remaining disk space) : ' rootSize
       [ "$rootSize" = e ] && echo -e '\nExiting...' && exit
       if [[ -z "$rootSize" ]]; then
         unset rootSize
@@ -247,7 +247,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # init
-  echo -e "INFO : In chroot, you cannot CTRL+C\nTo exit, \e[31mDO NOT CTRL+Z\e[0m (or it breaks)\nInstead, anwser 's' (skip) or 'e' (exit) to any question"
+  echo -e "INFO : In chroot, you cannot CTRL+C\nTo exit, \e[31mDO NOT CTRL+Z or CTRL+D\e[0m (or it breaks)\nInstead, anwser 's' (skip) or 'e' (exit) to any question"
 
   # region
   while true; do
