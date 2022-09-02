@@ -105,7 +105,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
   # init
   clear
-  read -p $'\e[33mWARNING : this script was made for ARCH ISOs. Otherwise, expect your system to break.\nAlso, there is a high chance you break your system by skipping steps or setting up multiple users.\e[0m\nContinue ? (default=n) ' x
+  read -p $'\e[33mWARNING : this script was made for ARCH ISOs. Otherwise, expect your system to break.\nAlso, there is a high chance of breaking your system by skipping steps or setting up multiple users.\e[0m\nContinue ? (default=n) ' x
 
   if [ "$x" != chroot ]; then
 
