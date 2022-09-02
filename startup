@@ -322,19 +322,23 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # keymap
   while true; do
-    readarray -t rawKeymaps <<< $(find /usr/share/kbd/keymaps -type f -printf "%f\n")
-    for i in "${rawKeymaps[@]}"; do
-      allKeymaps+=("${i%%.*}");
-      if [[ "${allKeymaps[@]: -1}" =~ ^[a-z]{2}$ ]]; then
-        filteredKeymaps+=("${i%%.*}")
-      fi
-    done
-    printf '%s\n' "${filteredKeymaps[@]}" | sort | column
+    if [[ -z "$check" ]] then;
+      readarray -t rawKeymaps <<< $(find /usr/share/kbd/keymaps -type f -printf "%f\n")
+      for i in "${rawKeymaps[@]}"; do
+        allKeymaps+=("${i%%.*}");
+        if [[ "${allKeymaps[@]: -1}" =~ ^[a-z]{2}$ ]]; then
+          filteredKeymaps+=("${i%%.*}")
+        fi
+      done
+      printf '%s\n' "${filteredKeymaps[@]}" | sort | uniq | column
+    else
+      unset check
+    fi
     echo
     read -p 'Keymap? (default=fr) (more options=all) : ' x
     echo
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
-    [ "$x" = all ] && printf '%s\n' "${allKeymaps[@]}" | sort | column | less && continue
+    [ "$x" = all ] && printf '%s\n' "${allKeymaps[@]}" | sort | uniq | column | less && check=true && continue
     [ "$x" = '' ] && x=fr
     if [[ "$x" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m\n"
