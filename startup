@@ -135,9 +135,10 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     # partitionning
     read -p $'Format ALL disk and setup partitions ?\n\e[31m(WARNING: THERE IS NO COMMING BACK)\e[0m (default=n) : ' x
     [ "$x" != y ] && echo -e '\nExiting...\n' && exit
+    echo
 
     while true; do
-      read -p $'\e[32mEFI SYSTEM\e[0m partition size (default:remaining disk space) : ' efiSize
+      read -p $'\e[32mEFI SYSTEM\e[0m partition size (default:512M) : ' efiSize
       [ "$efiSize" = e ] && echo -e '\nExiting...' && exit
       if [[ -z "$efiSize" ]]; then
         efiSize='+512M'
@@ -151,7 +152,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     done
 
     while true; do
-      read -p $'\e[32mSWAP\e[0m partition size (default:remaining disk space) : ' swapSize
+      read -p $'\e[32mSWAP\e[0m partition size (default:2G) : ' swapSize
       [ "$swapSize" = e ] && echo -e '\nExiting...' && exit
       if [[ -z "$swapSize" ]]; then
         swapSize='+2G'
