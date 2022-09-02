@@ -135,7 +135,6 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     # partitionning
     read -p $'Format ALL disk and setup partitions ?\n\e[31m(WARNING: THERE IS NO COMMING BACK)\e[0m (default=n) : ' x
     [ "$x" != y ] && echo -e '\nExiting...\n' && exit
-    [ "$x" != e ] && echo -e '\nExiting...\n' && exit
 
     while true; do
       read -p $'\e[32mEFI SYSTEM\e[0m partition size (default:remaining disk space) : ' efiSize
