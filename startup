@@ -4,7 +4,7 @@ diskSel() {
 
   while true; do
 
-    echo -e '\nDisks for installation :\n'
+    echo -e '\nDisks available for installation :\n'
     diskList=$(fdisk -l)
     readarray -t disks <<< $(egrep -o '^Disk /dev/[^,]+' <<< "$diskList" | grep -v '^Disk /dev/loop')
     for ((i=0; i < "${#disks[@]}"; i++)); do
