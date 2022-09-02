@@ -321,6 +321,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   done
 
   # keymap
+  while true; do
     readarray -t rawKeymaps <<< $(find /usr/share/kbd/keymaps -type f -printf "%f\n")
     for i in "${rawKeymaps[@]}"; do
       allKeymaps+=("${i%%.*}");
