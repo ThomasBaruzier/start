@@ -143,7 +143,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
       if [[ -z "$efiSize" ]]; then
         efiSize='+512M'
         break
-      elif [[ "${efiSize@^^}" == [0-9]+[K|M|G|T|P] ]]; then
+      elif [[ "${efiSize@^^}" =~ ^[0-9]+[K|M|G|T|P]$ ]]; then
         efiSize="+${efiSize^^}"
         break
       else
@@ -157,7 +157,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
       if [[ -z "$swapSize" ]]; then
         swapSize='+2G'
         break
-      elif [[ "${swapSize^^}" == [0-9]+[K|M|G|T|P] ]]; then
+      elif [[ "${swapSize^^}" =~ ^[0-9]+[K|M|G|T|P]$ ]]; then
         swapSize="+${swapSize^^}"
         break
       else
@@ -171,7 +171,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
       if [[ -z "$rootSize" ]]; then
         unset rootSize
         break
-      elif [[ "${rootSize^^}" == [0-9]+[K|M|G|T|P] ]]; then
+      elif [[ "${rootSize^^}" =~ ^[0-9]+[K|M|G|T|P]$ ]]; then
         rootSize="+${rootSize^^}"
         break
       else
