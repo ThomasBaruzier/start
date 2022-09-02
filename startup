@@ -446,7 +446,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p $'\nUpdate and install common packages ? (default=y) ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
-    pacman -Syu git vim jq bc p7zip wget python3 python-pip man htop tree file lynx whois base-devel linux-headers firefox potrace npm mediainfo mpv ttf-ms-fonts ttf-unifont
+    pacman -Syu git vim jq bc p7zip wget python3 python-pip man htop tree file lynx whois base-devel linux-headers firefox potrace npm mediainfo mpv
   else
     echo -e "> \e[31mSkipped\e[0m"
   fi
@@ -491,11 +491,14 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   systemctl enable NetworkManager >> /root/log 2>&1
 
   # yay
-  # git clone https://aur.archlinux.org/yay-git.git
+  # git clone --depth 1 https://aur.archlinux.org/yay-git.git
   # cd yay-git
   # makepkg -si
   # cd ..
   # rm -rf yay-git
+
+  # fonts
+  # yay -S ttf-ms-fonts ttf-unifont
 
   # pip
   # pip install spotdl yt-dlp
