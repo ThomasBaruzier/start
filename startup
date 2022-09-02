@@ -135,11 +135,55 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     # partitionning
     read -p $'Format ALL disk and setup partitions ?\n\e[31m(WARNING: THERE IS NO COMMING BACK)\e[0m (default=n) : ' x
     [ "$x" != y ] && echo -e '\nExiting...\n' && exit
-    dd if=/dev/zero of="$disk" bs=512 count=1 conv=notrunc >> log 2>&1
+    [ "$x" != e ] && echo -e '\nExiting...\n' && exit
+
+    while true; do
+      read -p $'\e[32mEFI SYSTEM\e[0m partition size (default:remaining disk space) : ' efiSize
+      [ "$efiSize" = e ] && echo -e '\nExiting...' && exit
+      if [[ -z "$efiSize" ]]; then
+        efiSize='+512M'
+        break
+      elif [[ "${efiSize@^^}" == [0-9]+[K|M|G|T|P] ]]; then
+        efiSize="+${efiSize^^}"
+        break
+      else
+        echo -e '\n> \e[31mERROR : Invalid input\e[0m'
+      fi
+    done
+
+    while true; do
+      read -p $'\e[32mSWAP\e[0m partition size (default:remaining disk space) : ' swapSize
+      [ "$swapSize" = e ] && echo -e '\nExiting...' && exit
+      if [[ -z "$swapSize" ]]; then
+        swapSize='+2G'
+        break
+      elif [[ "${swapSize^^}" == [0-9]+[K|M|G|T|P] ]]; then
+        swapSize="+${swapSize^^}"
+        break
+      else
+        echo -e '\n> \e[31mERROR : Invalid input\e[0m'
+      fi
+    done
+
+    while true; do
+      read -p $'\e[32mROOT\e[0m partition size (default:remaining disk space) : ' rootSize
+      [ "$rootSize" = e ] && echo -e '\nExiting...' && exit
+      if [[ -z "$rootSize" ]]; then
+        unset rootSize
+        break
+      elif [[ "${rootSize^^}" == [0-9]+[K|M|G|T|P] ]]; then
+        rootSize="+${rootSize^^}"
+        break
+      else
+        echo -e '\n> \e[31mERROR : Invalid input\e[0m'
+      fi
+    done
+
+    echo
     swapoff -a
-    echo; echo -e 'g\nn\n\n\n+500M\nn\n\n\n+2G\nn\n\n\n\nt\n1\n1\nt\n2\n19\nw' | fdisk "$disk" >> log 2>&1
+    dd if=/dev/zero of="$disk" bs=512 count=1 conv=notrunc >> log 2>&1
+    echo -e "g\nn\n\n\n${efiSize}\nn\n\n\n${swapSize}\nn\n\n\n${rootSize}\nt\n1\n1\nt\n2\n19\nw" | fdisk "$disk" >> log 2>&1
     fdisk -l "$disk" --color=always | egrep -v -e '^Units' -e '^Sector size' -e '^I/O' -e '^Disk identifier'
-    [ "$x" != y ] && echo -e '\nExiting...\n' && exit
 
     # filesystems
     efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
@@ -154,7 +198,6 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
       echo 'Please wait a few minutes...'
       mkfs.fat -F32 "$efi" >> log 2>&1
       mkfs.ext4 "$filesystem" >> log 2>&1
-      mkdir -p /mnt/boot /mnt/boot/EFI
       mount "$filesystem" /mnt >> log 2>&1
       mkswap "$swap" >> log 2>&1
       swapon "$swap" >> log 2>&1
@@ -176,14 +219,13 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
   else
 
-    diskSel  
+    diskSel
 
   fi
 
   # chroot
-  mkdir -p /mnt/boot /mnt/boot/EFI
   mount "$filesystem" /mnt >> log 2>&1
-  mount "$efi" /mnt/boot/EFI >> log 2>&1
+  mount --mkdir "$efi" /mnt/boot/EFI >> log 2>&1
   cp "$0" /mnt/root/install
   arch-chroot /mnt ./root/install
   rm -f /mnt/root/install /mnt/root/.efiDisk
