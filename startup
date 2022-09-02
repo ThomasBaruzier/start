@@ -347,7 +347,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
       echo -e "> \e[32mPermanent keymap set as $x\e[0m\n"
       break
     else
-      echo -e '> \e[31mERROR : Invalid input\e[0m\n'
+      echo -e '\n> \e[31mERROR : Invalid input\e[0m\n'
     fi
   done
 
