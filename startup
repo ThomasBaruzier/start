@@ -512,7 +512,8 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   # rm -rf yay-git
 
   ## theming
-  # yay -S gnome-browser-connector
+  # yay -S gnome-browser-connector mutter-rounded materia-transparent-gtk-theme-git
+  # sudo pacman -Sy gnome-tweaks
 
   ## fonts
   # yay -S ttf-ms-fonts ttf-unifont
