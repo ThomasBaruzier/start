@@ -469,7 +469,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p $'\nInstall AMD drivers, Xorg, and Gnome ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
-    pacman -Syu mesa xf86-video-amdgpu vulkan-radeon libva-mesa-driver mesa-vdpau xorg xorg-xinit gnome gnome-browser-connector
+    pacman -Syu mesa xf86-video-amdgpu vulkan-radeon libva-mesa-driver mesa-vdpau xorg xorg-xinit gnome
     xinit="/home/$(ls /home | head -n 1)/.xinitrc"
     cat /etc/X11/xinit/xinitrc | head -n-5 > "$xinit"
     echo "gnome-session" >> "$xinit"
@@ -511,6 +511,9 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   # makepkg -si
   # cd ..
   # rm -rf yay-git
+
+  ## theming
+  # yay -S gnome-browser-connector
 
   ## fonts
   # yay -S ttf-ms-fonts ttf-unifont
