@@ -445,7 +445,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p $'\nUpdate and install common packages ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
-    pacman -Syu git vim jq bc p7zip wget python3 python-pip man htop tree file lynx whois base-devel linux-headers firefox potrace npm mediainfo mpv celluloid android-tools
+    pacman -Syu git vim jq bc p7zip wget python3 python-pip man htop tree file lynx whois base-devel linux-headers firefox potrace npm mediainfo mpv celluloid android-tools jdk-openjdk
   else
     echo -e "> \e[31mSkipped\e[0m"
   fi
@@ -520,6 +520,12 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   # cd ..
   # rm -rf grub2-themes/
   # sudo grub-customizer
+  # sudo nano /etc/default/grub
+
+  ## debloat
+  # sudo rm -rf /usr/share/applications/lstopo.desktop /usr/share/applications/avahi-discover.desktop /usr/share/applications/vim.desktop /usr/share/applications/htop.desktop /usr/share/applications/bvnc.desktop /usr/share/applications/mpv.desktop /usr/share/applications/bssh.desktop /usr/share/applications/qvidcap.desktop /usr/share/applications/yelp.desktop /usr/share/applications/org.gnome.eog.desktop /usr/share/applications/org.gnome.Evince.desktop /usr/share/applications/org.gnome.Photos.desktop /usr/share/applications/org.gnome.FileRoller.desktop /usr/share/applications/qv4l2.desktop usr/share/applications/jconsole-java-openjdk.desktop usr/share/applications/jshell-java-openjdk.desktop
+  # sudo pacman -R gnome-books gnome-clocks gnome-contacts gnome-logs gnome-maps cheese epiphany gnome-boxes gnome-font-viewer gnome-characters totem malcontent
+  # sudo pacman -Rcns $(pacman -Qdtq)
 
   ## fonts
   # yay -S ttf-ms-fonts ttf-unifont
