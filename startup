@@ -88,9 +88,8 @@ if whoami | grep -q 'u0_'; then # Termux
   # pip
   echo -en "\nInstall pip and its packages? : "
   read x; [ "$x" = y ] && \
-  python3 -m pip install --upgrade pip && \
-  pip install rapidfuzz==1.9.1
-  pip install yt-dlp spotdl instaloader
+  pip install --upgrade pip && \
+  pip install -U --force spotdl==4.0.0rc3
 
   # vm
   echo -en "\nInstall ubuntu vm? : "
