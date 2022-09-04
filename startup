@@ -33,7 +33,7 @@ diskSel() {
 
   efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
   filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
-  umount -l -q "$efi" "$filesystem"
+  umount -l -q "$efi" "$filesystem" >> log 2>&1
 
 }
 
@@ -113,7 +113,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
     # internet check
     echo
-    if ping google.com -c1 >> /root/log 2>&1; then
+    if ping google.com -c1 >> log 2>&1; then
       echo '> Connected to the internet'
     else
       echo -e '> \e[31mERROR : Not connected to the internet. Please verify your connection and try again\e[0m\n'
@@ -189,7 +189,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
     swap=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux swap' | awk '{print $1}')
     filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
-    read -p $'\nMake filesystems ? (default=y) '
+    read -p $'\nMake filesystems ? (default=y) : '
     [ "$x" = e ] && echo -e '\nExiting...\n' && exit
     [ "$x" = n ] && echo -e '\nExiting...\n' && exit
     if [[ "$x" = s ]]; then
@@ -255,7 +255,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo
     ls /usr/share/zoneinfo/
     echo
-    read -p 'Region ? (default=Europe) ' x
+    read -p 'Region ? (default=Europe) : ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     [ "$x" = '' ] && x=Europe
     if [[ "$x" = s ]]; then
@@ -275,7 +275,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo
     ls /usr/share/zoneinfo/"$x"
     echo
-    read -p 'Location? (default=Paris) ' y
+    read -p 'Location? (default=Paris) : ' y
     [ "$y" = e ] && echo -e '\nExiting chroot...' && exit
     [ "$y" = '' ] && y=Paris
     if [[ "$y" = s ]]; then
@@ -296,7 +296,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo
     cat /etc/locale.gen | egrep -o '[a-z]+_[A-Z]{2}' | sort | uniq | column
     echo
-    read -p 'Locale? (default=fr_FR) ' x
+    read -p 'Locale? (default=fr_FR) : ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     [ "$x" = '' ] && x=fr_FR
     if [[ "$x" = s ]]; then
@@ -348,7 +348,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   done
 
   # hostname
-  read -p 'Hostname? (default=arch) ' host
+  read -p 'Hostname? (default=arch) : ' host
   [ "$host" = e ] && echo -e '\nExiting chroot...' && exit
   [ "$host" = '' ] && host=arch
   if [[ "$host" = s ]]; then
@@ -359,7 +359,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # root pass
-  read -p $'\nRoot password? (default=root) ' x
+  read -p $'\nRoot password? (default=root) : ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   [ "$x" = '' ] && x=root
   if [[ "$x" = s ]]; then
@@ -370,7 +370,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # user
-  read -p $'\nUser name? (default=user) ' user
+  read -p $'\nUser name? (default=user) : ' user
   [ "$user" = e ] && echo -e '\nExiting chroot...' && exit
   [ "$user" = '' ] && user=user
   if [[ "$user" = s ]]; then
@@ -383,7 +383,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # user pass
-  read -p $'\nUser password? (default=user) ' x
+  read -p $'\nUser password? (default=user) : ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   [ "$x" = '' ] && x=user
   if [[ "$x" = s ]]; then
@@ -394,7 +394,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # auto login
-  read -p $'\nAuto login ? (default=y) ' x
+  read -p $'\nAuto login ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
     mkdir -p /etc/systemd/system/getty@tty1.service.d
@@ -405,7 +405,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # sudo
-  read -p $'\nRequest password when user use sudo ? (default=n) ' x
+  read -p $'\nRequest password when user use sudo ? (default=n) : ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = n || -z "$x" ]]; then
     echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' | sudo EDITOR='tee -a' visudo >> /root/log 2>&1
@@ -418,7 +418,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # hosts
-  read -p $'\nAutoconfigure hosts file ? (default=y) ' x
+  read -p $'\nAutoconfigure hosts file ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = n ]]; then
     nano /etc/hosts
@@ -432,7 +432,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # grub
-  read -p 'Config grub? (default=y) ' x
+  read -p 'Config grub? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
     grub-install >> /root/log 2>&1
@@ -442,8 +442,8 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo -e "> \e[31mSkipped\e[0m"
   fi
 
-  # typical packages
-  read -p $'\nUpdate and install common packages ? (default=y) ' x
+  # common packages
+  read -p $'\nUpdate and install common packages ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
     pacman -Syu git vim jq bc p7zip wget python3 python-pip man htop tree file lynx whois base-devel linux-headers firefox potrace npm mediainfo mpv
@@ -452,7 +452,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # backup
-  read -p $'\nDownload and extract /home backup ? (default=y) ' x
+  read -p $'\nDownload and extract /home backup ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if echo "$x" | egrep -q '.{8,}'; then
     curl -# -L 'go.ly/bkp-prv' -o backup.7z && \
@@ -466,7 +466,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   rm -rf backup.7z
 
   # desktop environment
-  read -p $'\nInstall AMD drivers, Xorg, and Gnome ? (default=y) ' x
+  read -p $'\nInstall AMD drivers, Xorg, and Gnome ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
     pacman -Syu mesa xf86-video-amdgpu vulkan-radeon libva-mesa-driver mesa-vdpau xorg xorg-xinit gnome
@@ -481,8 +481,8 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
     pacman -Syu broadcom-wl-dkms
-    rmmod b43 b43legacy ssb bcm43xx brcm80211 brcmfmac brcmsmac bcma wl
-    modprobe wl
+    rmmod b43 b43legacy ssb bcm43xx brcm80211 brcmfmac brcmsmac bcma wl >> /root/log 2>&1
+    modprobe wl >> /root/log 2>&1
   else
     echo -e "> \e[31mSkipped\e[0m"
   fi
