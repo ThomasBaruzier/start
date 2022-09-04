@@ -513,7 +513,13 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   ## theming
   # yay -S gnome-browser-connector mutter-rounded materia-transparent-gtk-theme-git
-  # sudo pacman -Sy gnome-tweaks
+  # sudo pacman -Sy gnome-tweaks grub-customizer
+  # git clone --depth 1 https://github.com/vinceliuice/grub2-themes.git
+  # cd grub2-themes/
+  # sudo ./install.sh --theme stylish --screen ultrawide2k --icon white
+  # cd ..
+  # rm -rf grub2-themes/
+  # sudo grub-customizer
 
   ## fonts
   # yay -S ttf-ms-fonts ttf-unifont
