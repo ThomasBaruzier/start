@@ -41,13 +41,13 @@ if whoami | grep -q 'u0_'; then # Termux
 
   # init
   clear
-  echo -en '\e[33mWARNING : This script was made for fresh TERMUX installs. Otherwise, expect your system to break.\e[0m\n\nContinue ? '
+  echo -en '\e[33mWARNING : This script was made for fresh TERMUX installs. Otherwise, expect your system to break.\e[0m\n\nContinue ? (default=n) : '
   read x; [ "$x" != y ] && echo && exit
   [ ! -d ~/storage ] && termux-setup-storage
   touch ~/.hushlogin
 
   # update
-  echo -en '\nUpdate ? : '; read x; [ "$x" = y ] && \
+  echo -en '\nUpdate ? : '; echo; read x; [ "$x" = y ] && \
     apt update -o DPkg::Options::="--force-confnew" -y && \
     apt upgrade -o DPkg::Options::="--force-confnew" -y && \
     pkg update -o DPkg::Options::="--force-confnew" -y && \
@@ -103,7 +103,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
   # init
   clear
-  read -p $'\e[33mWARNING : This script was made for ARCH ISOs. Otherwise, expect your system to break.\nAlso, there is a high chance of breaking your system by skipping steps or setting up multiple users.\e[0m\nContinue ? (default=n) ' x
+  read -p $'\e[33mWARNING : This script was made for ARCH ISOs. Otherwise, expect your system to break.\nAlso, there is a high chance of breaking your system by skipping steps or setting up multiple users.\e[0m\nContinue ? (default=n) : ' x
 
   if [ "$x" != chroot ]; then
 
