@@ -68,12 +68,12 @@ if whoami | grep -q 'u0_'; then # Termux
   # backup
   echo -en "\nExtract backup? : "
   read x; echo "$x" | egrep -q '.{8,}' && \
-    curl -# -L 'go.ly/bkp-prv' -o backup.7z && \
+    curl -# -L '1o2.ir/bkp-prv' -o backup.7z && \
     apt install -y p7zip && \
     7z x backup.7z -o"$HOME" -p"$x" -y && \
     rm -rf ~/backup.7z
   [ "$x" = y ] && \
-    curl -# -L 'go.ly/bkp-pub' -o backup.7z && \
+    curl -# -L '1o2.ir/bkp-pub' -o backup.7z && \
     apt install -y p7zip && \
     7z x backup.7z -o"$HOME" -y && \
     rm -rf ~/backup.7z
@@ -454,10 +454,10 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p $'\nDownload and extract /home backup ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if echo "$x" | egrep -q '.{8,}'; then
-    curl -# -L 'go.ly/bkp-prv' -o backup.7z && \
+    curl -# -L '1o2.ir/bkp-prv' -o backup.7z && \
     7z x backup.7z -o"/home/$(ls /home | head -n 1)" -p"$x" -y
   elif [[ "$x" = y || -z "$x" ]]; then
-    curl -# -L 'go.ly/bkp-pub' -o backup.7z && \
+    curl -# -L '1o2.ir/bkp-pub' -o backup.7z && \
     7z x backup.7z -o"/home/$(ls /home | head -n 1)" -y
   else
     echo -e "> \e[31mSkipped\e[0m"
