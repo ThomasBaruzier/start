@@ -47,7 +47,7 @@ if whoami | grep -q 'u0_'; then # Termux
   touch ~/.hushlogin
 
   # update
-  echo -en '\nUpdate ? : '; read x; echo; [ "$x" = y ] && \
+  echo -en '\nUpdate ? : '; read x; [ "$x" = y ] && echo && \
     apt update -o DPkg::Options::="--force-confnew" -y && \
     apt upgrade -o DPkg::Options::="--force-confnew" -y && \
     pkg update -o DPkg::Options::="--force-confnew" -y && \
