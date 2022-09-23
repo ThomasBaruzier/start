@@ -46,8 +46,12 @@ if whoami | grep -q 'u0_'; then # Termux
   [ ! -d ~/storage ] && termux-setup-storage
   touch ~/.hushlogin
 
+  # edit sources
+  echo -en '\nAdd apt sources ? (default=y) : '; read x; [ "$x" != n ] && \
+    echo -e 'deb https://packages-cf.termux.dev/apt/termux-main/ stable main\ndeb https://packages.termux.dev/apt/termux-main/ stable main\ndeb https://cdn.lumito.net/termux/termux-main stable main' > ~/../usr/etc/apt/sources.list
+
   # update
-  echo -en '\nUpdate ? : '; read x; [ "$x" = y ] && echo && \
+  echo -en '\nUpdate ? (default=y) : '; read x; [ "$x" != n ] && echo && \
     apt update -o DPkg::Options::="--force-confnew" -y && \
     apt upgrade -o DPkg::Options::="--force-confnew" -y && \
     pkg update -o DPkg::Options::="--force-confnew" -y && \
@@ -56,8 +60,8 @@ if whoami | grep -q 'u0_'; then # Termux
   rm ~/storage/ -rf
 
   # packages
-  echo -en "\nInstall packages? : "
-  read x; [ "$x" = y ] && \
+  echo -en "\nInstall packages? (default=y) : "
+  read x; [ "$x" != n ] && \
   apt install wget nano python3 p7zip zip unzip\
       proot-distro git wget man htop tree mediainfo \
       nodejs ffmpeg file lynx jq bc whois \
@@ -65,33 +69,33 @@ if whoami | grep -q 'u0_'; then # Termux
       npm install -g npm@latest peerflix
 
   # backup
-  echo -en "\nExtract backup? : "
+  echo -en "\nExtract backup? (default=n) : "
   read x; echo "$x" | egrep -q '.{8,}' && \
-    wget '1o2.ir/bkp-prv' -O backup.7z && \
+    curl -#L '1o2.ir/bkp-prv' --http1.1 > backup.7z && \
     apt install -y p7zip && \
     7z x backup.7z -o"$HOME" -p"$x" -y && \
     rm -rf ~/backup.7z
   [ "$x" = y ] && \
-    wget '1o2.ir/bkp-pub' -O backup.7z && \
+    curl -#L '1o2.ir/bkp-pub' --http1.1 > backup.7z && \
     apt install -y p7zip && \
     7z x backup.7z -o"$HOME" -y && \
     rm -rf ~/backup.7z
 
   # java
-  echo -en "\nInstall java? : "
+  echo -en "\nInstall java? (default=n) : "
   read x; [ "$x" = y ] && \
   curl -s 'https://raw.githubusercontent.com/MasterDevX/java/master/installjava' -o javainstall && \
   bash javainstall && \
   rm -rf javainstall ~/.profile
 
   # pip
-  echo -en "\nInstall pip and its packages? : "
+  echo -en "\nInstall pip and its packages? (default=n) : "
   read x; [ "$x" = y ] && \
   pip install --upgrade pip && \
   pip install -U --force spotdl==4.0.0rc3
 
   # vm
-  echo -en "\nInstall ubuntu vm? : "
+  echo -en "\nInstall ubuntu vm? (default=n) : "
   read x; [ "$x" = y ] && \
   apt install proot-distro && \
   proot-distro install ubuntu
@@ -453,10 +457,10 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   read -p $'\nDownload and extract /home backup ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if echo "$x" | egrep -q '.{8,}'; then
-    wget '1o2.ir/bkp-prv' -O backup.7z && \
+    curl -#L '1o2.ir/bkp-prv' --http1.1 > backup.7z && \
     7z x backup.7z -o"/home/$(ls /home | head -n 1)" -p"$x" -y
   elif [[ "$x" = y || -z "$x" ]]; then
-    wget '1o2.ir/bkp-pub' -O backup.7z && \
+    curl -#L '1o2.ir/bkp-pub' --http1.1 > backup.7z && \
     7z x backup.7z -o"/home/$(ls /home | head -n 1)" -y
   else
     echo -e "> \e[31mSkipped\e[0m"
