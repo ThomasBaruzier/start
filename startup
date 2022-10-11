@@ -62,9 +62,9 @@ if whoami | grep -q 'u0_'; then # Termux
   # packages
   echo -en "\nInstall packages? (default=y) : "
   read x; [ "$x" != n ] && \
-  apt install wget nano python3 p7zip zip unzip\
+  apt install wget nano python3 p7zip zip unzip \
       proot-distro git wget man htop tree mediainfo \
-      nodejs ffmpeg file lynx jq bc whois \
+      nodejs ffmpeg file lynx jq bc whois openssh \
       -o DPkg::Options::="--force-confnew" -y && \
       npm install -g npm@latest peerflix
 
