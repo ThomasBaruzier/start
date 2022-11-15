@@ -6,7 +6,7 @@ diskSel() {
 
     echo -e '\nDisks available for installation :\n'
     diskList=$(fdisk -l)
-    readarray -t disks <<< $(egrep -o '^Disk /dev/[^,]+' <<< "$diskList" | grep -v '^Disk /dev/loop')
+    readarray -t disks <<< $(grep -E -o '^Disk /dev/[^,]+' <<< "$diskList" | grep -v '^Disk /dev/loop')
     for ((i=0; i < "${#disks[@]}"; i++)); do
       choiceList[i]=$(echo "[$i] - $(grep -b1 "${disks[i]}" <<< "$diskList" | tail -n 1 | grep -Po '(?<=: ).+' | sed 's: *$::g') - ${disks[i]:6}")
     done
@@ -22,7 +22,7 @@ diskSel() {
     fi
     disk="${disks[x]:6}"
     if [[ -n "$disk" && "$x" =~ [0-9]+ ]]; then
-      disk="/$(egrep -o '^[^: ]+' <<< "$disk")"
+      disk="/$(grep -E -o '^[^: ]+' <<< "$disk")"
       echo -e "> \e[32mSelected ${choiceList[x]:6}\e[0m\n"
       break
     else
@@ -70,7 +70,7 @@ if whoami | grep -q 'u0_'; then # Termux
 
   # backup
   echo -en "\nExtract backup? (default=n) : "
-  read x; echo "$x" | egrep -q '.{8,}' && \
+  read x; echo "$x" | grep -E -q '.{8,}' && \
     curl -#L '1o2.ir/bkp-prv' --http1.1 > backup.7z && \
     apt install -y p7zip && \
     7z x backup.7z -o"$HOME" -p"$x" -y && \
@@ -185,7 +185,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     dd if=/dev/zero of="$disk" bs=512 count=1 conv=notrunc >> log 2>&1
     echo -e "g\nn\n\n\n${efiSize}\nn\n\n\n${swapSize}\nn\n\n\n${rootSize}\nt\n1\n1\nt\n2\n19\nw" | fdisk "$disk" >> log 2>&1
     echo -e "\n\e[32mRESULTS :\e[0m\n"
-    fdisk -l "$disk" --color=always | egrep -v -e '^Units' -e '^Sector size' -e '^I/O' -e '^Disk identifier'
+    fdisk -l "$disk" --color=always | grep -E -v -e '^Units' -e '^Sector size' -e '^I/O' -e '^Disk identifier'
 
     # filesystems
     efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
@@ -296,7 +296,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   # locale
   while true; do
     echo
-    cat /etc/locale.gen | egrep -o '[a-z]+_[A-Z]{2}' | sort | uniq | column
+    cat /etc/locale.gen | grep -E -o '[a-z]+_[A-Z]{2}' | sort | uniq | column
     echo
     read -p 'Locale? (default=fr_FR) : ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
@@ -304,7 +304,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     if [[ "$x" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m\n"
       break
-    elif [[ -n $(egrep "^#$x" /etc/locale.gen) && "$x" =~ [a-z]+_[A-Z]{2} ]]; then
+    elif [[ -n $(grep -E "^#$x" /etc/locale.gen) && "$x" =~ [a-z]+_[A-Z]{2} ]]; then
       selected=$(grep "^#$x" /etc/locale.gen | grep UTF | head -n 1)
       if [[ -f /etc/locale.gen.bak ]]; then
         cp /etc/locale.gen.bak /etc/locale.gen
@@ -313,9 +313,9 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
       fi
       result=$(sed "s:$selected:${selected:1}:" /etc/locale.gen)
       echo "$result" >> /etc/locale.gen
-      egrep -o "^[a-z]+[A-Z]{2}" /etc/locale.gen
+      grep -E -o "^[a-z]+[A-Z]{2}" /etc/locale.gen
       locale-gen >> /root/log 2>&1
-      echo -e "> \e[32mApplied $(sed 's:UTF-8 UTF-8:UTF-8:' <<< $(egrep "^[a-z]+_[A-Z]{2}" /etc/locale.gen))\e[0m\n"
+      echo -e "> \e[32mApplied $(sed 's:UTF-8 UTF-8:UTF-8:' <<< $(grep -E "^[a-z]+_[A-Z]{2}" /etc/locale.gen))\e[0m\n"
       break
     else
       echo -e '\n> \e[31mERROR : Invalid input\e[0m'
@@ -340,7 +340,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     if [[ "$x" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m\n"
       break
-    elif [[ -n $(printf '%s\n' "${allKeymaps[@]}" | egrep '^'"$x"'$') ]]; then
+    elif [[ -n $(printf '%s\n' "${allKeymaps[@]}" | grep -E '^'"$x"'$') ]]; then
       echo "KEYMAP=$x" > /etc/vconsole.conf
       echo -e "> \e[32mPermanent keymap set as $x\e[0m\n"
       break
@@ -456,7 +456,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   # backup
   read -p $'\nDownload and extract /home backup ? (default=y) : ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
-  if echo "$x" | egrep -q '.{8,}'; then
+  if echo "$x" | grep -E -q '.{8,}'; then
     curl -#L '1o2.ir/bkp-prv' --http1.1 > backup.7z && \
     7z x backup.7z -o"/home/$(ls /home | head -n 1)" -p"$x" -y
   elif [[ "$x" = y || -z "$x" ]]; then
