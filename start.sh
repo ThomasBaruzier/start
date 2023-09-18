@@ -228,7 +228,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     else
       kernel='linux'
     fi
-    pacstrap /mnt base "$kernel" linux-firmware
+    pacstrap /mnt base "$kernel" linux-firmware vim nano sudo
     genfstab -U /mnt >> /mnt/etc/fstab
 
     # chroot
@@ -450,11 +450,34 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo -e "> \e[31mSkipped\e[0m\n"
   fi
 
+  # microcode
+  echo -e '\nPlease choose a microcode package:\n'
+  echo '[1] AMD'
+  echo '[2] Intel'
+  echo '[n] None'
+  read -p $'\n> ' x
+  [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
+
+  if [ "$x" = 1 ]; then
+    pacman -S --noconfirm amd-ucode
+    if [ "$?" = 0 ]; then
+      echo -e "> \e[32mAMD microcode was installed\e[0m"
+    else
+      echo -e "> \e[32mAMD microcode failed to install\e[0m"
+    fi
+  elif [ "$x" = 2 ]; then
+    pacman -S --noconfirm intel-ucode
+    if [ "$?" = 0 ]; then
+      echo -e "> \e[32mIntel microcode was installed\e[0m"
+    else
+      echo -e "> \e[32mIntel microcode failed to install\e[0m"
+    fi
+  fi
 
   # boot manager
   echo -e '\nPlease choose a bootloader:\n'
-  echo '[1] Efistub'
-  echo '[2] Grub'
+  echo '[1] EFISTUB'
+  echo '[2] GRUB'
   echo '[n] None'
   read -p $'\n> ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
@@ -465,34 +488,34 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     grub-install >> /root/log 2>&1 || flag=true
     grub-mkconfig -o /boot/grub/grub.cfg >> /root/log 2>&1 || flag=true
     if [ "$flag" = true ]; then
-      echo -e "> \e[32mGrub configuration failed\e[0m"
+      echo -e "> \e[32mGRUB configuration failed\e[0m"
     else
-      echo -e "> \e[32mGrub was configured\e[0m"
+      echo -e "> \e[32mGRUB was configured\e[0m"
     fi
   elif [ "$x" = 2 ]; then
     pacman -Sy efibootmgr --noconfirm || flag=true
     uuid="UUID=$(lsblk -f | grep '/$' | awk '{print $4}')"
     read -p 'Add silent boot kernel flags ? (default=y)' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
-    if [ "$x" != n ]; then
-      silent_flags='quiet loglevel=3 systemd.show_status=auto rd.udev.log_level=3'
-    fi
+    [ "$x" != n ] && silent_flags='quiet loglevel=3 systemd.show_status=auto rd.udev.log_level=3'
     part="${efi##*[^0-9]}"
     disk="${efi::-${#part}}"
     pacman -Qqs '^linux-zen$' && kernel=linux-zen
     pacman -Qqs '^linux$' && kernel=linux
     ucode=$(find /boot -name '*-ucode.img' | head -n 1)
-    if [ -n "$ucode" ]; then
-      ucode="initrd=\\${ucode##*/}"
-    else
-      unset ucode
-    fi
+    if [ -n "$ucode" ]; then ucode="initrd=\\${ucode##*/}"
+    else unset ucode; fi
 
     echo "COMMAND: efibootmgr --create --disk \"$disk\" --part \"$part\" --label \"Arch Linux\" --loader \"/vmlinuz-$kernel\" --unicode \"root=$uuid rw $ucode initrd=\initramfs-$kernel.img $silent_flags\""
     read -p 'Proceed ? (default=y) : ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     if [ "$x" != n ]; then
       efibootmgr --create --disk "$disk" --part "$part" --label "Arch Linux" --loader "/vmlinuz-$kernel" --unicode "root=$uuid rw $ucode initrd=\initramfs-$kernel.img $silent_flags"
+      if [ "$?" = 0 ]; then
+        echo -e "> \e[32mEFISTUB was configured\e[0m"
+      else
+        echo -e "> \e[32mEFISTUB configuration failed\e[0m"
+      fi
     fi
   fi
 
