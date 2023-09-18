@@ -519,11 +519,23 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     fi
   fi
 
-  # common packages
-  read -p $'\nUpdate and install common packages ? (default=y) : ' x
+  # packages
+  base_packages='base-devel bc ffmpeg git htop jq lsof nano net-tools p7zip pv python python-pip screen sudo tree vim wget'
+  extended_packages='arch-install-scripts cmake efibootmgr imagemagick jdk-openjdk mediainfo nvtop python-spotdl rtorrent yt-dlp'
+  graphic_packages='bluez bluez-utils celluloid firefox grim kitty mpv nautilus noto-fonts-cjk pulseaudio pulseaudio-bluetooth pavucontrol slurp swaybg ttf-jetbrains-mono-nerd wl-clipboard'
+  echo -e '\nPlease choose a package list:\n'
+  echo "[1] Base (default) : $base_packages"
+  echo "[2] Extended : $extended_packages"
+  echo "[3] Graphical : $graphic_packages"
+  echo "[n] None"
+  read -p $'\n> ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
-  if [[ "$x" = y || -z "$x" ]]; then
-    pacman -Syu git vim jq bc p7zip wget python3 python-pip man htop tree file lynx whois base-devel linux-headers firefox potrace npm mediainfo mpv celluloid android-tools jdk-openjdk exfat-utils
+  if [ "$x" = 1 ] || [ -z "$x" ]; then
+    pacman -Syu $base_packages
+  elif [ "$x" = 2 ]; then
+    pacman -Syu $base_packages $extended_packages
+  elif [ "$x" = 3 ]; then
+    pacman -Syu $base_packages $extended_packages $graphical_packages
   else
     echo -e "> \e[31mSkipped\e[0m"
   fi
@@ -578,6 +590,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # other
   systemctl enable NetworkManager >> /root/log 2>&1
+  systemctl enable iwd >> /root/log 2>&1
 
   ## post install commands
 
