@@ -164,7 +164,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
         break
       elif [ "$swapSize" = s ]; then
         echo -e '\e[33mWARNING : Skipping the swap partition\e[0m'
-	swapLess=true
+	      swapLess=true
         break
       else
         echo -e '\n> \e[31mERROR : Invalid input\e[0m\n'
@@ -188,7 +188,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     swapoff -a
     dd if=/dev/zero of="$disk" bs=512 count=1 conv=notrunc >> log 2>&1
     if [ "$swapLess" = true ]; then
-      echo -e "g\nn\n\n\n${efiSize}\nn\n\n\n${rootSize}\nt\n1\n1\nw" | fdisk "$disk" >> log 2>&1      
+      echo -e "g\nn\n\n\n${efiSize}\nn\n\n\n${rootSize}\nt\n1\n1\nw" | fdisk "$disk" >> log 2>&1
     else
       echo -e "g\nn\n\n\n${efiSize}\nn\n\n\n${swapSize}\nn\n\n\n${rootSize}\nt\n1\n1\nt\n2\n19\nw" | fdisk "$disk" >> log 2>&1
     fi
@@ -200,8 +200,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     [ "$swapLess" = true ] || swap=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux swap' | awk '{print $1}')
     filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
     read -p $'\nMake filesystems ? (default=y) : '
-    [ "$x" = e ] && echo -e '\nExiting...\n' && exit
-    [ "$x" = n ] && echo -e '\nExiting...\n' && exit
+    if [ "$x" = e ] || [ "$x" = n ]; then echo -e '\nExiting...\n' && exit; fi
     if [[ "$x" = s ]]; then
         echo -e '\e[31mSkipped\e[0m\n'
     else
@@ -217,16 +216,24 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     fi
 
     # arch-chroot
-    read -p $'Install base packages ? (default=y) : ' x
-    [ "$x" = e ] && echo -e '\nExiting...\n' && exit
-    [ "$x" = n ] && echo -e '\nExiting...\n' && exit
-    pacstrap /mnt base linux linux-firmware nano sudo grub efibootmgr dosfstools os-prober mtools networkmanager
+    read -p 'Install base packages ? (default=y) : ' x
+    if [ "$x" = e ] || [ "$x" = n ]; then echo -e '\nExiting...\n' && exit; fi
+    read -p 'Install zen kernel ? (improved performance, higher power consumption) (default=y) : ' x
+    if [ "$x" = e ]; then
+      echo -e '\nExiting...\n'
+      exit
+    elif [ "$x" = n ]; then
+      echo 'Installing non-zen kernel...'
+      kernel='linux-zen'
+    else
+      kernel='linux'
+    fi
+    pacstrap /mnt base "$kernel" linux-firmware
     genfstab -U /mnt >> /mnt/etc/fstab
 
     # chroot
     read -p $'\nChroot in ? (default=y) : ' x
-    [ "$x" = e ] && echo -e '\nExiting...\n' && exit
-    [ "$x" = n ] && echo -e '\nExiting...\n' && exit
+    if [ "$x" = e ] || [ "$x" = n ]; then echo -e '\nExiting...\n' && exit; fi
     echo
 
   else
@@ -237,7 +244,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
   # chroot
   mount "$filesystem" /mnt >> log 2>&1
-  mount --mkdir "$efi" /mnt/boot/EFI >> log 2>&1
+  mount --mkdir "$efi" /mnt/boot >> log 2>&1
   cp "$0" /mnt/root/install
   chmod +x /mnt/root/install
   arch-chroot /mnt ./root/install
@@ -390,7 +397,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     user=user
   else
     useradd -m "$user" >> /root/log 2>&1 && \
-    usermod -aG wheel,audio,video,optical,storage "$user"
+    usermod -aG wheel "$user"
     echo -e "> \e[32mAdded user \"$user\"\e[0m"
   fi
 
@@ -443,15 +450,50 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo -e "> \e[31mSkipped\e[0m\n"
   fi
 
-  # grub
-  read -p 'Config grub? (default=y) : ' x
+
+  # boot manager
+  echo -e '\nPlease choose a bootloader:\n'
+  echo '[1] Efistub'
+  echo '[2] Grub'
+  echo '[n] None'
+  read -p $'\n> ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
-  if [[ "$x" = y || -z "$x" ]]; then
-    grub-install >> /root/log 2>&1
-    grub-mkconfig -o /boot/grub/grub.cfg >> /root/log 2>&1
-    echo -e "> \e[32mGrub was configured\e[0m"
-  else
-    echo -e "> \e[31mSkipped\e[0m"
+
+  unset flag
+  if [ "$x" = 1 ]; then
+    pacman -Sy grub os-prober --noconfirm || flag=true
+    grub-install >> /root/log 2>&1 || flag=true
+    grub-mkconfig -o /boot/grub/grub.cfg >> /root/log 2>&1 || flag=true
+    if [ "$flag" = true ]; then
+      echo -e "> \e[32mGrub configuration failed\e[0m"
+    else
+      echo -e "> \e[32mGrub was configured\e[0m"
+    fi
+  elif [ "$x" = 2 ]; then
+    pacman -Sy efibootmgr --noconfirm || flag=true
+    uuid="UUID=$(lsblk -f | grep '/$' | awk '{print $4}')"
+    read -p 'Add silent boot kernel flags ? (default=y)' x
+    [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
+    if [ "$x" != n ]; then
+      silent_flags='quiet loglevel=3 systemd.show_status=auto rd.udev.log_level=3'
+    fi
+    part="${efi##*[^0-9]}"
+    disk="${efi::-${#part}}"
+    pacman -Qqs '^linux-zen$' && kernel=linux-zen
+    pacman -Qqs '^linux$' && kernel=linux
+    ucode=$(find /boot -name '*-ucode.img' | head -n 1)
+    if [ -n "$ucode" ]; then
+      ucode="initrd=\\${ucode##*/}"
+    else
+      unset ucode
+    fi
+
+    echo "COMMAND: efibootmgr --create --disk \"$disk\" --part \"$part\" --label \"Arch Linux\" --loader \"/vmlinuz-$kernel\" --unicode \"root=$uuid rw $ucode initrd=\initramfs-$kernel.img $silent_flags\""
+    read -p 'Proceed ? (default=y) : ' x
+    [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
+    if [ "$x" != n ]; then
+      efibootmgr --create --disk "$disk" --part "$part" --label "Arch Linux" --loader "/vmlinuz-$kernel" --unicode "root=$uuid rw $ucode initrd=\initramfs-$kernel.img $silent_flags"
+    fi
   fi
 
   # common packages
