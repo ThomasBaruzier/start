@@ -215,7 +215,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
       echo -e 'Done\n'
     fi
 
-    # arch-chroot
+    # pactrap
     read -p 'Install base packages ? (default=y) : ' x
     if [ "$x" = e ] || [ "$x" = n ]; then echo -e '\nExiting...\n' && exit; fi
     read -p 'Install zen kernel ? (improved performance, higher power consumption) (default=y) : ' x
@@ -228,8 +228,23 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     else
       kernel='linux-zen'
     fi
+
+    echo -e '\nPlease choose a microcode package:\n'
+    echo '[1] AMD'
+    echo '[2] Intel'
+    echo '[n] None'
+    read -p $'\n> ' x
+    [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
+    if [ "$x" = 1 ]; then
+      microcode=amd-ucode
+    elif [ "$x" = 2 ]; then
+      microcode=intel-ucode
+    else
+      unset microcode
+    fi
+
     sed -i 's:#ParallelDownloads:ParallelDownloads:' /etc/pacman.conf
-    pacstrap /mnt base "$kernel" linux-firmware vim nano sudo
+    pacstrap /mnt base "$kernel" linux-firmware vim nano sudo "$microcode"
     genfstab -U /mnt >> /mnt/etc/fstab
 
     # chroot
@@ -449,30 +464,6 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo -e "> \e[32mHosts file has been configured\e[0m\n"
   else
     echo -e "> \e[31mSkipped\e[0m\n"
-  fi
-
-  # microcode
-  echo -e '\nPlease choose a microcode package:\n'
-  echo '[1] AMD'
-  echo '[2] Intel'
-  echo '[n] None'
-  read -p $'\n> ' x
-  [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
-
-  if [ "$x" = 1 ]; then
-    pacman -S --noconfirm amd-ucode
-    if [ "$?" = 0 ]; then
-      echo -e "> \e[32mAMD microcode was installed\e[0m"
-    else
-      echo -e "> \e[32mAMD microcode failed to install\e[0m"
-    fi
-  elif [ "$x" = 2 ]; then
-    pacman -S --noconfirm intel-ucode
-    if [ "$?" = 0 ]; then
-      echo -e "> \e[32mIntel microcode was installed\e[0m"
-    else
-      echo -e "> \e[32mIntel microcode failed to install\e[0m"
-    fi
   fi
 
   # boot manager
