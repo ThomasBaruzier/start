@@ -4,7 +4,7 @@ diskSel() {
 
   while true; do
 
-    echo -e '\nDisks available for installation :\n'
+    echo -e '\nDisks available for installation:\n'
     diskList=$(fdisk -l)
     readarray -t disks <<< $(grep -E -o '^Disk /dev/[^,]+' <<< "$diskList" | grep -v '^Disk /dev/loop')
     for ((i=0; i < "${#disks[@]}"; i++)); do
@@ -12,7 +12,7 @@ diskSel() {
     done
     printf '%s\n' "${choiceList[@]}"
     echo
-    read -p 'Option (m for more info) (default=0) : ' x
+    read -p 'Option (m for more info) (default=0): ' x
     echo
     if [ "$x" = m ]; then
      clear && fdisk -l
@@ -26,7 +26,7 @@ diskSel() {
       echo -e "> \e[32mSelected ${choiceList[x]:6}\e[0m\n"
       break
     else
-      echo -e "> \e[31mERROR : Invalid selection\e[0m"
+      echo -e "> \e[31mERROR: Invalid selection\e[0m"
     fi
 
   done
@@ -41,17 +41,17 @@ if whoami | grep -q 'u0_'; then # Termux
 
   # init
   clear
-  echo -en '\e[33mWARNING : This script was made for fresh TERMUX installs. Otherwise, expect your system to break.\e[0m\n\nContinue ? (default=n) : '
+  echo -en '\e[33mWARNING: This script was made for fresh TERMUX installs. Otherwise, expect your system to break.\e[0m\n\nContinue? (default=n): '
   read x; [ "$x" != y ] && echo && exit
   [ ! -d ~/storage ] && termux-setup-storage
   touch ~/.hushlogin
 
   # edit sources
-  echo -en '\nAdd apt sources ? (default=y) : '; read x; [ "$x" != n ] && \
+  echo -en '\nAdd apt sources? (default=y): '; read x; [ "$x" != n ] && \
     echo -e 'deb https://packages-cf.termux.dev/apt/termux-main/ stable main\ndeb https://packages.termux.dev/apt/termux-main/ stable main\ndeb https://cdn.lumito.net/termux/termux-main stable main' > ~/../usr/etc/apt/sources.list
 
   # update
-  echo -en '\nUpdate ? (default=y) : '; read x; [ "$x" != n ] && echo && \
+  echo -en '\nUpdate? (default=y): '; read x; [ "$x" != n ] && echo && \
     apt update -o DPkg::Options::="--force-confnew" -y && \
     apt upgrade -o DPkg::Options::="--force-confnew" -y && \
     pkg update -o DPkg::Options::="--force-confnew" -y && \
@@ -60,7 +60,7 @@ if whoami | grep -q 'u0_'; then # Termux
   rm ~/storage/ -rf
 
   # packages
-  echo -en "\nInstall packages? (default=y) : "
+  echo -en "\nInstall packages? (default=y): "
   read x; [ "$x" != n ] && \
   apt install wget nano python3 p7zip zip unzip nmap \
       proot-distro git wget man htop tree mediainfo \
@@ -69,7 +69,7 @@ if whoami | grep -q 'u0_'; then # Termux
       npm install -g npm@latest peerflix
 
   # backup
-  echo -en "\nExtract backup? (default=n) : "
+  echo -en "\nExtract backup? (default=n): "
   read x; echo "$x" | grep -E -q '.{8,}' && \
     curl -#L '1o2.ir/bkp-prv' --http1.1 > backup.7z && \
     apt install -y p7zip && \
@@ -82,20 +82,20 @@ if whoami | grep -q 'u0_'; then # Termux
     rm -rf ~/backup.7z
 
   # java
-  echo -en "\nInstall java? (default=n) : "
+  echo -en "\nInstall java? (default=n): "
   read x; [ "$x" = y ] && \
   curl -s 'https://raw.githubusercontent.com/MasterDevX/java/master/installjava' -o javainstall && \
   bash javainstall && \
   rm -rf javainstall ~/.profile
 
   # pip
-  echo -en "\nInstall pip and its packages? (default=n) : "
+  echo -en "\nInstall pip and its packages? (default=n): "
   read x; [ "$x" = y ] && \
   pip install --upgrade pip && \
   pip install -U --force spotdl==4.0.0rc3
 
   # vm
-  echo -en "\nInstall ubuntu vm? (default=n) : "
+  echo -en "\nInstall ubuntu vm? (default=n): "
   read x; [ "$x" = y ] && \
   apt install proot-distro && \
   proot-distro install ubuntu
@@ -107,7 +107,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
   # init
   clear
-  read -p $'\e[33mWARNING : This script was made for ARCH ISOs. Otherwise, expect your system to break.\nAlso, there is a high chance of breaking your system by skipping steps or setting up multiple users.\e[0m\nContinue ? (default=n) : ' x
+  read -p $'\e[33mWARNING: This script was made for ARCH ISOs. Otherwise, expect your system to break.\nAlso, there is a high chance of breaking your system by skipping steps or setting up multiple users.\e[0m\nContinue? (default=n): ' x
 
   if [ "$x" != chroot ]; then
 
@@ -118,7 +118,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     if ping google.com -c1 >> log 2>&1; then
       echo '> Connected to the internet'
     else
-      echo -e '> \e[31mERROR : Not connected to the internet. Please verify your connection and try again\e[0m\n'
+      echo -e '> \e[31mERROR: Not connected to the internet. Please verify your connection and try again\e[0m\n'
       exit
     fi
 
@@ -135,12 +135,12 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     diskSel
 
     # partitionning
-    read -p $'Format ALL disk and setup partitions ?\n\e[31m(WARNING: THERE IS NO COMMING BACK)\e[0m (default=n) : ' x
+    read -p $'Format ALL disk and setup partitions?\n\e[31m(WARNING: THERE IS NO COMMING BACK)\e[0m (default=n): ' x
     [ "$x" != y ] && echo -e '\nExiting...\n' && exit
     echo
 
     while true; do
-      read -p $'\e[35mEFI SYSTEM\e[0m partition size (default:512M) : ' efiSize
+      read -p $'\e[35mEFI SYSTEM\e[0m partition size (default:512M): ' efiSize
       [ "$efiSize" = e ] && echo -e '\nExiting...' && exit
       if [[ -z "$efiSize" ]]; then
         efiSize='+512M'
@@ -149,12 +149,12 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
         efiSize="+${efiSize:u}"
         break
       else
-        echo -e '\n> \e[31mERROR : Invalid input\e[0m\n'
+        echo -e '\n> \e[31mERROR: Invalid input\e[0m\n'
       fi
     done
 
     while true; do
-      read -p $'\e[35mSWAP\e[0m partition size (default:2G) (s to skip) : ' swapSize
+      read -p $'\e[35mSWAP\e[0m partition size (default:2G) (s to skip): ' swapSize
       [ "$swapSize" = e ] && echo -e '\nExiting...' && exit
       if [[ -z "$swapSize" ]]; then
         swapSize='+2G'
@@ -163,16 +163,16 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
         swapSize="+${swapSize:u}"
         break
       elif [ "$swapSize" = s ]; then
-        echo -e '\e[33mWARNING : Skipping the swap partition\e[0m'
+        echo -e '\e[33mWARNING: Skipping the swap partition\e[0m'
 	      swapLess=true
         break
       else
-        echo -e '\n> \e[31mERROR : Invalid input\e[0m\n'
+        echo -e '\n> \e[31mERROR: Invalid input\e[0m\n'
       fi
     done
 
     while true; do
-      read -p $'\e[35mROOT\e[0m partition size (default:remaining disk space) : ' rootSize
+      read -p $'\e[35mROOT\e[0m partition size (default:remaining disk space): ' rootSize
       [ "$rootSize" = e ] && echo -e '\nExiting...' && exit
       if [[ -z "$rootSize" ]]; then
         unset rootSize
@@ -181,7 +181,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
         rootSize="+${rootSize:u}"
         break
       else
-        echo -e '\n> \e[31mERROR : Invalid input\e[0m\n'
+        echo -e '\n> \e[31mERROR: Invalid input\e[0m\n'
       fi
     done
 
@@ -192,14 +192,14 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     else
       echo -e "g\nn\n\n\n${efiSize}\nn\n\n\n${swapSize}\nn\n\n\n${rootSize}\nt\n1\n1\nt\n2\n19\nw" | fdisk "$disk" >> log 2>&1
     fi
-    echo -e "\n\e[32mRESULTS :\e[0m\n"
+    echo -e "\n\e[32mRESULTS:\e[0m\n"
     fdisk -l "$disk" --color=always | grep -E -v -e '^Units' -e '^Sector size' -e '^I/O' -e '^Disk identifier'
 
     # filesystems
     efi=$(fdisk -l "$disk" | tail -n 3 | grep 'EFI System' | awk '{print $1}')
     [ "$swapLess" = true ] || swap=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux swap' | awk '{print $1}')
     filesystem=$(fdisk -l "$disk" | tail -n 3 | grep 'Linux filesystem' | awk '{print $1}')
-    read -p $'\nMake filesystems ? (default=y) : '
+    read -p $'\nMake filesystems? (default=y): '
     if [ "$x" = e ] || [ "$x" = n ]; then echo -e '\nExiting...\n' && exit; fi
     if [[ "$x" = s ]]; then
         echo -e '\e[31mSkipped\e[0m\n'
@@ -216,9 +216,9 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     fi
 
     # pactrap
-    read -p 'Install base packages ? (default=y) : ' x
+    read -p 'Install base packages? (default=y): ' x
     if [ "$x" = e ] || [ "$x" = n ]; then echo -e '\nExiting...\n' && exit; fi
-    read -p 'Install zen kernel ? (improved performance, higher power consumption) (default=y) : ' x
+    read -p 'Install zen kernel? (improved performance, higher power consumption) (default=y): ' x
     if [ "$x" = e ]; then
       echo -e '\nExiting...\n'
       exit
@@ -229,11 +229,10 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
       kernel='linux-zen'
     fi
 
-    echo -e '\nPlease choose a microcode package:\n'
-    echo '[1] AMD'
+    echo -e '\n[1] AMD'
     echo '[2] Intel'
     echo '[n] None'
-    read -p $'\n> ' x
+    read -p 'Please choose a microcode package: ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     if [ "$x" = 1 ]; then
       microcode=amd-ucode
@@ -248,7 +247,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     genfstab -U /mnt >> /mnt/etc/fstab
 
     # chroot
-    read -p $'\nChroot in ? (default=y) : ' x
+    read -p $'\nChroot in? (default=y): ' x
     if [ "$x" = e ] || [ "$x" = n ]; then echo -e '\nExiting...\n' && exit; fi
     echo
 
@@ -267,7 +266,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   rm -f /mnt/root/install /mnt/root/.efiDisk
 
   # reboot
-  read -p $'\nReboot ? (default=y) : ' x
+  read -p $'\nReboot? (default=y): ' x
   [ "$x" = e ] && echo -e '\nExiting...\n' && exit
   if [[ "$x" == y || -z "$x" ]]; then
     swapoff -a
@@ -283,14 +282,14 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
 
   # init
-  echo -e "INFO : In chroot, you cannot CTRL+C\nTo exit, \e[31mDO NOT CTRL+Z or CTRL+D\e[0m (or it breaks)\nInstead, anwser 's' (skip) or 'e' (exit) to any question"
+  echo -e "INFO: In chroot, you cannot CTRL+C\nTo exit, \e[31mDO NOT CTRL+Z or CTRL+D\e[0m (or it breaks)\nInstead, anwser 's' (skip) or 'e' (exit) to any question"
 
   # region
   while true; do
     echo
     ls /usr/share/zoneinfo/
     echo
-    read -p 'Region ? (default=Europe) : ' x
+    read -p 'Region? (default=Europe): ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     [ "$x" = '' ] && x=Europe
     if [[ "$x" = s ]]; then
@@ -300,7 +299,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
       echo -e "> \e[32mSelected $x\e[0m"
       break
     else
-      echo -e '\n> \e[31mERROR : Invalid input\e[0m'
+      echo -e '\n> \e[31mERROR: Invalid input\e[0m'
     fi
   done
 
@@ -310,7 +309,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo
     ls /usr/share/zoneinfo/"$x"
     echo
-    read -p 'Location? (default=Paris) : ' y
+    read -p 'Location? (default=Paris): ' y
     [ "$y" = e ] && echo -e '\nExiting chroot...' && exit
     [ "$y" = '' ] && y=Paris
     if [[ "$y" = s ]]; then
@@ -322,7 +321,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
       hwclock --systohc
       break
     else
-      echo -e '\n> \e[31mERROR : Invalid input\e[0m'
+      echo -e '\n> \e[31mERROR: Invalid input\e[0m'
     fi
   done
 
@@ -331,7 +330,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo
     cat /etc/locale.gen | grep -E -o '[a-z]+_[A-Z]{2}' | sort | uniq | column
     echo
-    read -p 'Locale? (default=fr_FR) : ' x
+    read -p 'Locale? (default=fr_FR): ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     [ "$x" = '' ] && x=fr_FR
     if [[ "$x" = s ]]; then
@@ -351,7 +350,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
       echo -e "> \e[32mApplied $(sed 's:UTF-8 UTF-8:UTF-8:' <<< $(grep -E "^[a-z]+_[A-Z]{2}" /etc/locale.gen))\e[0m\n"
       break
     else
-      echo -e '\n> \e[31mERROR : Invalid input\e[0m'
+      echo -e '\n> \e[31mERROR: Invalid input\e[0m'
     fi
   done
 
@@ -366,7 +365,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     done
     printf '%s\n' "${filteredKeymaps[@]}" | sort | uniq | column
     echo
-    read -p 'Keymap? (default=fr) (more options=all) : ' x
+    read -p 'Keymap? (default=fr) (more options=all): ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     [ "$x" = all ] && printf '%s\n' "${allKeymaps[@]}" | sort | uniq | column | less && echo && continue
     [ "$x" = '' ] && x=fr
@@ -378,12 +377,12 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
       echo -e "> \e[32mPermanent keymap set as $x\e[0m\n"
       break
     else
-      echo -e '\n> \e[31mERROR : Invalid input\e[0m\n'
+      echo -e '\n> \e[31mERROR: Invalid input\e[0m\n'
     fi
   done
 
   # hostname
-  read -p 'Hostname? (default=arch) : ' host
+  read -p 'Hostname? (default=arch): ' host
   [ "$host" = e ] && echo -e '\nExiting chroot...' && exit
   [ "$host" = '' ] && host=arch
   if [[ "$host" = s ]]; then
@@ -394,7 +393,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # root pass
-  read -p $'\nRoot password? (default=root) : ' x
+  read -p $'\nRoot password? (default=root): ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   [ "$x" = '' ] && x=root
   if [[ "$x" = s ]]; then
@@ -405,7 +404,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # user
-  read -p $'\nUser name? (default=user) : ' user
+  read -p $'\nUser name? (default=user): ' user
   [ "$user" = e ] && echo -e '\nExiting chroot...' && exit
   [ "$user" = '' ] && user=user
   if [[ "$user" = s ]]; then
@@ -418,7 +417,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # user pass
-  read -p $'\nUser password? (default=user) : ' x
+  read -p $'\nUser password? (default=user): ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   [ "$x" = '' ] && x=user
   if [[ "$x" = s ]]; then
@@ -429,7 +428,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # auto login
-  read -p $'\nAuto login ? (default=y) : ' x
+  read -p $'\nAuto login? (default=y): ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
     mkdir -p /etc/systemd/system/getty@tty1.service.d
@@ -440,7 +439,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # sudo
-  read -p $'\nRequest password when user use sudo ? (default=n) : ' x
+  read -p $'\nRequest password when user use sudo? (default=n): ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = n || -z "$x" ]]; then
     echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' | sudo EDITOR='tee -a' visudo >> /root/log 2>&1
@@ -453,7 +452,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # hosts
-  read -p $'\nAutoconfigure hosts file ? (default=y) : ' x
+  read -p $'\nAutoconfigure hosts file? (default=y): ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = n ]]; then
     nano /etc/hosts
@@ -487,7 +486,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   elif [ "$x" = 2 ]; then
     pacman -Sy efibootmgr --noconfirm || flag=true
     uuid="UUID=$(lsblk -f | grep '/$' | awk '{print $4}')"
-    read -p 'Add silent boot kernel flags ? (default=y)' x
+    read -p 'Add silent boot kernel flags? (default=y)' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     [ "$x" != n ] && silent_flags='quiet loglevel=3 systemd.show_status=auto rd.udev.log_level=3'
     part="${efi##*[^0-9]}"
@@ -499,7 +498,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     else unset ucode; fi
 
     echo "COMMAND: efibootmgr --create --disk \"$disk\" --part \"$part\" --label \"Arch Linux\" --loader \"/vmlinuz-$kernel\" --unicode \"root=$uuid rw $ucode initrd=\initramfs-$kernel.img $silent_flags\""
-    read -p 'Proceed ? (default=y) : ' x
+    read -p 'Proceed? (default=y): ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     if [ "$x" != n ]; then
       efibootmgr --create --disk "$disk" --part "$part" --label "Arch Linux" --loader "/vmlinuz-$kernel" --unicode "root=$uuid rw $ucode initrd=\initramfs-$kernel.img $silent_flags"
@@ -516,9 +515,9 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   extended_packages='arch-install-scripts cmake efibootmgr imagemagick jdk-openjdk mediainfo nvtop python-spotdl rtorrent yt-dlp'
   graphic_packages='bluez bluez-utils celluloid firefox grim kitty mpv nautilus noto-fonts-cjk pulseaudio pulseaudio-bluetooth pavucontrol slurp swaybg ttf-jetbrains-mono-nerd wl-clipboard'
   echo -e '\nPlease choose a package list:\n'
-  echo "[1] Base (default) : $base_packages"
-  echo "[2] Extended : $extended_packages"
-  echo "[3] Graphical : $graphic_packages"
+  echo "[1] Base (default): $base_packages"
+  echo "[2] Extended: $extended_packages"
+  echo "[3] Graphical: $graphic_packages"
   echo "[n] None"
   read -p $'\n> ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
@@ -533,7 +532,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # backup
-  read -p $'\nDownload and extract /home backup ? (default=y) : ' x
+  read -p $'\nDownload and extract /home backup? (default=y): ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if echo "$x" | grep -E -q '.{8,}'; then
     curl -#L '1o2.ir/bkp-prv' --http1.1 > backup.7z && \
@@ -547,7 +546,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   rm -rf backup.7z
 
   # desktop environment
-  read -p $'\nInstall AMD drivers, Xorg, and Gnome ? (default=y) : ' x
+  read -p $'\nInstall AMD drivers, Xorg, and Gnome? (default=y): ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
     pacman -Syu mesa xf86-video-amdgpu vulkan-radeon libva-mesa-driver mesa-vdpau xorg xorg-xinit gnome
@@ -560,7 +559,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # broadcom wifi drivers
-  read -p $'\nSetup broadcom-wl-dkms driver ? (default=y) ' x
+  read -p $'\nSetup broadcom-wl-dkms driver? (default=y) ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
     pacman -Sy broadcom-wl-dkms
@@ -571,7 +570,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # printing
-  read -p $'\nSetup printing service ? (default=y) ' x
+  read -p $'\nSetup printing service? (default=y) ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [[ "$x" = y || -z "$x" ]]; then
     pacman -Sy cups
