@@ -243,9 +243,9 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
       unset microcode
     fi
 
-    genfstab -U /mnt >> /mnt/etc/fstab
     sed -i 's:#ParallelDownloads:ParallelDownloads:' /etc/pacman.conf
     pacstrap /mnt base "$kernel" linux-firmware vim nano sudo "$microcode"
+    genfstab -U /mnt >> /mnt/etc/fstab
 
     # chroot
     read -p $'\nChroot in? (default=y): ' x
