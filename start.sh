@@ -224,9 +224,9 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
       exit
     elif [ "$x" = n ]; then
       echo 'Installing non-zen kernel...'
-      kernel='linux-zen'
-    else
       kernel='linux'
+    else
+      kernel='linux-zen'
     fi
     pacstrap /mnt base "$kernel" linux-firmware vim nano sudo
     genfstab -U /mnt >> /mnt/etc/fstab
