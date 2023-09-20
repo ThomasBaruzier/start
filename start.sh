@@ -205,12 +205,12 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
         echo -e '\e[31mSkipped\e[0m\n'
     else
       echo 'Please wait a few minutes...'
-      mkfs.fat -F32 "$efi" >> log 2>&1
-      mkfs.ext4 "$filesystem" >> log 2>&1
-      mount "$filesystem" /mnt >> log 2>&1
+      mkfs.fat -F32 "$efi" >> log 2>&1 || echo -e '\e[31mERROR: Failed to make filesystem for boot partition\e[0m'
+      mkfs.ext4 "$filesystem" >> log 2>&1 || echo -e '\e[31mERROR: Failed to make filesystem for root partition\e[0m'
+      mount "$filesystem" /mnt >> log 2>&1 || echo -e '\e[31mERROR: Failed to mount root partition\e[0m'
       if [ "$swapLess" != true ]; then
-        mkswap "$swap" >> log 2>&1
-        swapon "$swap" >> log 2>&1
+        mkswap "$swap" >> log 2>&1 || echo -e '\e[31mERROR: Failed to make swap partition\e[0m'
+        swapon "$swap" >> log 2>&1 || echo -e '\e[31mERROR: Failed to activate swap partition\e[0m'
       fi
       echo -e 'Done\n'
     fi
@@ -258,10 +258,10 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   fi
 
   # chroot
-  mount "$filesystem" /mnt >> log 2>&1
-  mount --mkdir "$efi" /mnt/boot >> log 2>&1
-  cp "$0" /mnt/root/install
-  chmod +x /mnt/root/install
+  mount "$filesystem" /mnt >> log 2>&1 || echo -e '\e[31mERROR: Failed to mount root partition\e[0m'
+  mount --mkdir "$efi" /mnt/boot >> log 2>&1 || echo -e '\e[31mERROR: Failed to mount boot partition\e[0m'
+  cp "$0" /mnt/root/install || echo -e '\e[31mERROR: Failed to copy install script to root partition\e[0m'
+  chmod +x /mnt/root/install || echo -e '\e[31mERROR: Failed to make install script executable in root partition\e[0m'
   arch-chroot /mnt ./root/install
   rm -f /mnt/root/install /mnt/root/.efiDisk
 
