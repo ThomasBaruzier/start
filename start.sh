@@ -330,9 +330,9 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     echo
     cat /etc/locale.gen | grep -E -o '[a-z]+_[A-Z]{2}' | sort | uniq | column
     echo
-    read -p 'Locale? (default=fr_FR): ' x
+    read -p 'Locale? (default=en_US): ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
-    [ "$x" = '' ] && x=fr_FR
+    [ "$x" = '' ] && x=en_US
     if [[ "$x" = s ]]; then
       echo -e "> \e[31mSkipped\e[0m\n"
       break
@@ -466,11 +466,10 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # boot manager
-  echo -e '\nPlease choose a bootloader:\n'
-  echo '[1] EFISTUB'
-  echo '[2] GRUB'
+  echo -e '\n[1] GRUB'
+  echo '[2] EFISTUB'
   echo '[n] None'
-  read -p $'\n> ' x
+  read -p $'Please choose a bootloader: ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
 
   unset flag
@@ -479,7 +478,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     grub-install >> /root/log 2>&1 || flag=true
     grub-mkconfig -o /boot/grub/grub.cfg >> /root/log 2>&1 || flag=true
     if [ "$flag" = true ]; then
-      echo -e "> \e[32mGRUB configuration failed\e[0m"
+      echo -e "> \e[31mGRUB configuration failed\e[0m"
     else
       echo -e "> \e[32mGRUB was configured\e[0m"
     fi
@@ -505,7 +504,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
       if [ "$?" = 0 ]; then
         echo -e "> \e[32mEFISTUB was configured\e[0m"
       else
-        echo -e "> \e[32mEFISTUB configuration failed\e[0m"
+        echo -e "> \e[31mEFISTUB configuration failed\e[0m"
       fi
     fi
   fi
