@@ -232,7 +232,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
 
     echo -e '\n[1] AMD'
     echo '[2] Intel'
-    echo '[n] None'
+    echo '[n] None (default)'
     read -p $'\nMicrocode package: ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     if [ "$x" = 1 ]; then
@@ -469,7 +469,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   # boot manager
   echo -e '\n[1] GRUB'
   echo '[2] EFISTUB'
-  echo '[n] None'
+  echo '[n] None (default)'
   read -p $'\nBootloader: ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
 
@@ -508,6 +508,8 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
         echo -e "> \e[31mEFISTUB configuration failed\e[0m"
       fi
     fi
+  else
+    echo -e '\e[33mWARNING: Skipped bootloader setup\e[0m'
   fi
 
   # packages
