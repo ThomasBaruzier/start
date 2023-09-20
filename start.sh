@@ -205,7 +205,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
         echo -e '\e[31mSkipped\e[0m\n'
     else
       echo 'Please wait a few minutes...'
-      umount -l -q "$efi" "$filesystem"
+      umount -l -q "$efi" "$filesystem" >> log 2>&1
       mkfs.fat -F32 "$efi" >> log 2>&1 || echo -e '\e[31mERROR: Failed to make filesystem for boot partition\e[0m'
       mkfs.ext4 "$filesystem" >> log 2>&1 || echo -e '\e[31mERROR: Failed to make filesystem for root partition\e[0m'
       mount "$filesystem" /mnt >> log 2>&1 || echo -e '\e[31mERROR: Failed to mount root partition\e[0m'
@@ -243,9 +243,9 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
       unset microcode
     fi
 
+    genfstab -U /mnt >> /mnt/etc/fstab
     sed -i 's:#ParallelDownloads:ParallelDownloads:' /etc/pacman.conf
     pacstrap /mnt base "$kernel" linux-firmware vim nano sudo "$microcode"
-    genfstab -U /mnt >> /mnt/etc/fstab
 
     # chroot
     read -p $'\nChroot in? (default=y): ' x
@@ -259,6 +259,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   fi
 
   # chroot
+  umount -l -q "$efi" "$filesystem" >> log 2>&1
   mount "$filesystem" /mnt >> log 2>&1 || echo -e '\e[31mERROR: Failed to mount root partition\e[0m'
   mount --mkdir "$efi" /mnt/boot >> log 2>&1 || echo -e '\e[31mERROR: Failed to mount boot partition\e[0m'
   cp "$0" /mnt/root/install || echo -e '\e[31mERROR: Failed to copy install script to root partition\e[0m'
@@ -271,7 +272,6 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   [ "$x" = e ] && echo -e '\nExiting...\n' && exit
   if [ "$x" == y ]; then
     swapoff -a
-    umount "$filesystem" "$efi" >> log 2>&1
     umount -R /mnt >> log 2>&1
     reboot
   fi
@@ -467,7 +467,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   fi
 
   # boot manager
-  echo -e '\n[1] GRUB'
+  echo -e '[1] GRUB'
   echo '[2] EFISTUB'
   echo '[n] None (default)'
   read -p $'\nBootloader: ' x
@@ -479,49 +479,48 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     grub-install >> /root/log 2>&1 || flag=true
     grub-mkconfig -o /boot/grub/grub.cfg >> /root/log 2>&1 || flag=true
     if [ "$flag" = true ]; then
-      echo -e "> \e[31mGRUB configuration failed\e[0m"
+      echo -e "> \e[31mGRUB configuration failed\e[0m\n"
     else
-      echo -e "> \e[32mGRUB was configured\e[0m"
+      echo -e "> \e[32mGRUB was configured\e[0m\n"
     fi
   elif [ "$x" = 2 ]; then
     pacman -Sy efibootmgr --noconfirm || flag=true
     uuid="UUID=$(lsblk -f | grep '/$' | awk '{print $4}')"
-    read -p 'Add silent boot kernel flags? (default=y)' x
+    read -p 'Add silent boot kernel flags? (default=y): ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     [ "$x" != n ] && silent_flags='quiet loglevel=3 systemd.show_status=auto rd.udev.log_level=3'
     part="${efi##*[^0-9]}"
     disk="${efi::-${#part}}"
-    pacman -Qqs '^linux-zen$' && kernel=linux-zen
-    pacman -Qqs '^linux$' && kernel=linux
+    pacman -Qqs '^linux-zen$' 2>&1 >/dev/null && kernel=linux-zen
+    pacman -Qqs '^linux$' 2>&1 >/dev/null && kernel=linux
     ucode=$(find /boot -name '*-ucode.img' | head -n 1)
-    if [ -n "$ucode" ]; then ucode="initrd=\\${ucode##*/}"
+    if [ -n "$ucode" ]; then ucode=" initrd=\\${ucode##*/}"
     else unset ucode; fi
 
-    echo "COMMAND: efibootmgr --create --disk \"$disk\" --part \"$part\" --label \"Arch Linux\" --loader \"/vmlinuz-$kernel\" --unicode \"root=$uuid rw $ucode initrd=\initramfs-$kernel.img $silent_flags\""
+    echo "COMMAND: efibootmgr --create --disk \"$disk\" --part \"$part\" --label \"Arch Linux\" --loader \"/vmlinuz-$kernel\" --unicode \"root=$uuid rw${ucode} initrd=\initramfs-$kernel.img $silent_flags\""
     read -p 'Proceed? (default=y): ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     if [ "$x" != n ]; then
-      efibootmgr --create --disk "$disk" --part "$part" --label "Arch Linux" --loader "/vmlinuz-$kernel" --unicode "root=$uuid rw $ucode initrd=\initramfs-$kernel.img $silent_flags"
+      efibootmgr --create --disk "$disk" --part "$part" --label "Arch Linux" --loader "/vmlinuz-$kernel" --unicode "root=$uuid rw${ucode} initrd=\initramfs-$kernel.img $silent_flags"
       if [ "$?" = 0 ]; then
-        echo -e "> \e[32mEFISTUB was configured\e[0m"
+        echo -e "> \e[32mEFISTUB was configured\e[0m\n"
       else
-        echo -e "> \e[31mEFISTUB configuration failed\e[0m"
+        echo -e "> \e[31mEFISTUB configuration failed\e[0m\n"
       fi
     fi
   else
-    echo -e '\e[33mWARNING: Skipped bootloader setup\e[0m'
+    echo -e '\e[33mWARNING: Skipped bootloader setup\e[0m\n'
   fi
 
   # packages
   base_packages='base-devel bc ffmpeg git htop jq lsof nano net-tools p7zip pv python python-pip screen sudo tree vim wget'
   extended_packages='arch-install-scripts cmake efibootmgr imagemagick jdk-openjdk mediainfo nvtop python-spotdl rtorrent yt-dlp'
   graphic_packages='bluez bluez-utils celluloid firefox grim kitty mpv nautilus noto-fonts-cjk pulseaudio pulseaudio-bluetooth pavucontrol slurp swaybg ttf-jetbrains-mono-nerd wl-clipboard'
-  echo -e '\nPlease choose a package list:\n'
   echo "[1] Base (default): $base_packages"
   echo "[2] Extended: $extended_packages"
   echo "[3] Graphical: $graphic_packages"
   echo "[n] None"
-  read -p $'\n> ' x
+  echo -e '\nPackage list:\n'
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
   if [ "$x" = 1 ] || [ -z "$x" ]; then
     pacman -Syu $base_packages
