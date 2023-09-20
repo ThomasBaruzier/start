@@ -228,6 +228,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     else
       kernel='linux-zen'
     fi
+    sed -i 's:#ParallelDownloads:ParallelDownloads:' /etc/pacman.conf
     pacstrap /mnt base "$kernel" linux-firmware vim nano sudo
     genfstab -U /mnt >> /mnt/etc/fstab
 
