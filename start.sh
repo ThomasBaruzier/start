@@ -266,9 +266,9 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   rm -f /mnt/root/install /mnt/root/.efiDisk
 
   # reboot
-  read -p $'\nReboot? (default=y): ' x
+  read -p $'\nReboot? (default=n): ' x
   [ "$x" = e ] && echo -e '\nExiting...\n' && exit
-  if [[ "$x" == y || -z "$x" ]]; then
+  if [ "$x" == y ]; then
     swapoff -a
     umount "$filesystem" "$efi" >> log 2>&1
     umount -R /mnt >> log 2>&1
