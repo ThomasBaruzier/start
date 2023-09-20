@@ -233,7 +233,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
     echo -e '\n[1] AMD'
     echo '[2] Intel'
     echo '[n] None'
-    read -p 'Please choose a microcode package: ' x
+    read -p $'\nMicrocode package: ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     if [ "$x" = 1 ]; then
       microcode=amd-ucode
@@ -470,7 +470,7 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
   echo -e '\n[1] GRUB'
   echo '[2] EFISTUB'
   echo '[n] None'
-  read -p $'Please choose a bootloader: ' x
+  read -p $'\nBootloader: ' x
   [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
 
   unset flag
