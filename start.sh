@@ -265,7 +265,6 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
   cp "$0" /mnt/root/install || echo -e '\e[31mERROR: Failed to copy install script to root partition\e[0m'
   chmod +x /mnt/root/install || echo -e '\e[31mERROR: Failed to make install script executable in root partition\e[0m'
   arch-chroot /mnt ./root/install
-  rm -f /mnt/root/install /mnt/root/.efiDisk
 
   # reboot
   read -p $'\nReboot? (default=n): ' x
@@ -489,8 +488,15 @@ elif [[ $(uname -a) =~ 'archiso' ]]; then # arch chroot
     read -p 'Add silent boot kernel flags? (default=y): ' x
     [ "$x" = e ] && echo -e '\nExiting chroot...' && exit
     [ "$x" != n ] && silent_flags='quiet loglevel=3 systemd.show_status=auto rd.udev.log_level=3'
-    part="${efi##*[^0-9]}"
-    disk="${efi::-${#part}}"
+    root_info=$(grep -B1 -E 'UUID=[a-z0-9-]+.*/ ' /etc/fstab)
+    root_uuid=$(grep -Eo 'UUID=[a-z0-9-]+' <<< "$root_info")
+    efi_partition=$(grep -B1 -E 'UUID=[a-z0-9-]+.*/boot ' /etc/fstab | grep -Po '/dev/\K.+')
+    part="${efi_partition##*[^0-9]}"
+    disk="${efi_partition::-${#part}}"
+    if [ -e "/dev/${disk::-1}" ] && [ ! -e "/dev/${disk}" ]; then
+      part="${disk: -1}${part}"
+      disk="${disk::-1}"
+    fi
     pacman -Qqs '^linux-zen$' 2>&1 >/dev/null && kernel=linux-zen
     pacman -Qqs '^linux$' 2>&1 >/dev/null && kernel=linux
     ucode=$(find /boot -name '*-ucode.img' | head -n 1)
