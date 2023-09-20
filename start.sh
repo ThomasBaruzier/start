@@ -205,6 +205,7 @@ elif [[ $(arch-chroot 2>&1) == '==> ERROR: No chroot directory specified' ]]; th
         echo -e '\e[31mSkipped\e[0m\n'
     else
       echo 'Please wait a few minutes...'
+      umount -l -q "$efi" "$filesystem"
       mkfs.fat -F32 "$efi" >> log 2>&1 || echo -e '\e[31mERROR: Failed to make filesystem for boot partition\e[0m'
       mkfs.ext4 "$filesystem" >> log 2>&1 || echo -e '\e[31mERROR: Failed to make filesystem for root partition\e[0m'
       mount "$filesystem" /mnt >> log 2>&1 || echo -e '\e[31mERROR: Failed to mount root partition\e[0m'
